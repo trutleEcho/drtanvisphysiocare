@@ -51,6 +51,7 @@ const activities = [
 ]
 
 export function RecentActivity() {
+  
   return (
     <Card>
       <CardHeader>
