@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Home, ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import FaultyTerminal from "@/components/backgrounds/faulty-terminal";
 
 const FloatingParticle = ({ delay = 0 }) => {
     return (
@@ -38,28 +39,47 @@ export default function NotFoundPage() {
     if (!mounted) return null;
 
     return (
-        <div className="min-h-screen relative overflow-hidden flex flex-col">
-            {/* Animated Background Elements */}
-            <div className="absolute inset-0">
-                {/* Gradient Orbs */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 0.1, scale: 1 }}
-                    transition={{ duration: 2, ease: "easeOut" }}
-                    className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent rounded-full blur-3xl"
-                />
-                <motion.div
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 0.05, scale: 1 }}
-                    transition={{ duration: 2, delay: 0.5, ease: "easeOut" }}
-                    className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl"
-                />
+        <div className="w-full h-screen relative">
+            {/*<FaultyTerminal*/}
+            {/*    scale={1.5}*/}
+            {/*    gridMul={[2, 1]}*/}
+            {/*    digitSize={1.2}*/}
+            {/*    timeScale={1}*/}
+            {/*    pause={false}*/}
+            {/*    scanlineIntensity={1}*/}
+            {/*    glitchAmount={1}*/}
+            {/*    flickerAmount={1}*/}
+            {/*    noiseAmp={1}*/}
+            {/*    chromaticAberration={0}*/}
+            {/*    dither={0}*/}
+            {/*    curvature={0}*/}
+            {/*    tint="#ffffff"*/}
+            {/*    mouseReact*/}
+            {/*    mouseStrength={0.5}*/}
+            {/*    pageLoadAnimation={false}*/}
+            {/*    brightness={1}*/}
+            {/*/>*/}
+            {/*/!* Animated Background Elements *!/*/}
+            {/*<div className="absolute inset-0">*/}
+            {/*    /!* Gradient Orbs *!/*/}
+            {/*    <motion.div*/}
+            {/*        initial={{ opacity: 0, scale: 0 }}*/}
+            {/*        animate={{ opacity: 0.1, scale: 1 }}*/}
+            {/*        transition={{ duration: 2, ease: "easeOut" }}*/}
+            {/*        className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent rounded-full blur-3xl"*/}
+            {/*    />*/}
+            {/*    <motion.div*/}
+            {/*        initial={{ opacity: 0, scale: 0 }}*/}
+            {/*        animate={{ opacity: 0.05, scale: 1 }}*/}
+            {/*        transition={{ duration: 2, delay: 0.5, ease: "easeOut" }}*/}
+            {/*        className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-3xl"*/}
+            {/*    />*/}
 
-                {/* Floating Particles */}
-                {Array.from({ length: 15 }, (_, i) => (
-                    <FloatingParticle key={i} delay={i * 0.5} />
-                ))}
-            </div>
+            {/*    /!* Floating Particles *!/*/}
+            {/*    {Array.from({ length: 15 }, (_, i) => (*/}
+            {/*        <FloatingParticle key={i} delay={i * 0.5} />*/}
+            {/*    ))}*/}
+            {/*</div>*/}
 
             {/*/!* Header with Logo *!/*/}
             {/*<motion.header*/}
@@ -115,7 +135,7 @@ export default function NotFoundPage() {
             {/*</motion.header>*/}
 
             {/* Main Content */}
-            <div className="flex-1 flex items-center justify-center px-6 relative z-10">
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-2xl">
                 <div className="text-center max-w-2xl mx-auto">
                     {/* Glass Morphism Container */}
                     <motion.div
@@ -136,7 +156,7 @@ export default function NotFoundPage() {
                             }}
                             className="relative"
                         >
-                            <div className="text-8xl md:text-9xl font-bold opacity-20 absolute inset-0 blur-sm">
+                            <div className="text-8xl  md:text-9xl font-bold opacity-20 absolute inset-0 blur-sm">
                                 404
                             </div>
                             <div className="text-8xl md:text-9xl font-bold text-primary/80 relative z-10">
@@ -215,25 +235,6 @@ export default function NotFoundPage() {
                 </div>
             </div>
 
-            {/* Footer */}
-            <motion.footer
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 1.7 }}
-                className="relative z-10 p-6 text-center"
-            >
-                <p className="text-gray-500 text-sm">
-                    ©{new Date().getFullYear()} Shivam Sales Corporation All rights reserved.
-                </p>
-            </motion.footer>
-
-            {/* Ambient Light Effect */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 3, delay: 0.5 }}
-                className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-white/5 pointer-events-none"
-            />
         </div>
     );
 }

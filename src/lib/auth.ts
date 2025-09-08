@@ -1,6 +1,15 @@
 import type { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  password: string;
+  createdAt: number;
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -36,16 +45,16 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user } ) {
       if (user) {
-        token.role = user.role
+        token.name = user.name
       }
       return token
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.sub
-        session.user.role = token.role
+        // session.user.id = token.sub
+        // session.user.role = token.role
       }
       return session
     },
