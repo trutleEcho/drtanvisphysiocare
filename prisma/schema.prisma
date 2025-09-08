@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"] // only if using @prisma/adapter-neon (remove if not using)
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+model Doctor {
+  id        String   @id @default(uuid())
+  name      String
+  license   String?
+  phone     String
+  email     String   @unique
+  createdAt DateTime @default(now())
+}

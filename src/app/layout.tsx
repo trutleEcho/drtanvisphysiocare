@@ -7,7 +7,7 @@ import "./globals.css"
 import {ThemeProvider} from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-    title: "Dr. Tanvis PhysioCare",
+    title: "Dr. Tanvi's",
     description: "CRM for Physiotherapy Practice",
 }
 
