@@ -19,7 +19,7 @@ import {Separator} from "@/components/ui/separator";
 import {AnimatedThemeToggler} from "@/components/magicui/animated-theme-toggler";
 
 const links = [
-    {label: "Dashboard", href: "/", icon: <LayoutDashboard className="w-5 h-5"/>},
+    {label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="w-5 h-5"/>},
     {label: "Patients", href: "/patients", icon: <Users className="w-5 h-5"/>},
     {label: "Appointments", href: "/appointments", icon: <Calendar className="w-5 h-5"/>},
     {label: "Case Papers", href: "/case-papers", icon: <FileText className="w-5 h-5"/>},
@@ -38,7 +38,6 @@ export function TopAndSidebar() {
                                 <SidebarLink key={idx} link={link}/>
                             ))}
                         </div>
-                        <AnimatedThemeToggler/>
                     </div>
                     <div>
                         <SidebarLink

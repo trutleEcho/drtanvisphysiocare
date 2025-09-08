@@ -4,7 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts"
 
 function getColor(variable: string) {
-    return getComputedStyle(document.documentElement).getPropertyValue(variable).trim()
+    if (typeof window !== "undefined") {
+        return getComputedStyle(document.documentElement)
+            .getPropertyValue(variable)
+            .trim()
+    }
+    return "" // fallback for SSR
 }
 
 const data = [

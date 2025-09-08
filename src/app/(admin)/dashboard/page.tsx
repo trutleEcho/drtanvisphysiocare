@@ -3,9 +3,7 @@ import {PatientStatsChart} from "@/components/sections/admin/dashboard/patient-s
 import {AppointmentMetrics} from "@/components/sections/admin/dashboard/appointment-metrics"
 import {RevenueChart} from "@/components/sections/admin/dashboard/revenue-chart"
 import {RecentActivity} from "@/components/sections/admin/dashboard/recent-activity"
-import {Users, Calendar, FileText, TrendingUp} from "lucide-react"
 import PageHeader from "@/components/composable/page-header";
-import StatCard from "@/components/ui/stat-card";
 import StatsSection from "@/components/sections/admin/dashboard/stats-section";
 import {ErrorBoundary} from "@/components/error-boundary";
 
