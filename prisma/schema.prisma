@@ -1,16 +1,37 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["driverAdapters"] // only if using @prisma/adapter-neon (remove if not using)
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DATABASE_URL_UNPOOLED")
+  provider = "postgresql"
+  url      = env("POSTGRES_URL_NON_POOLING")
+}
+
+model Organization {
+  id          String      @id @default(cuid())
+  name        String
+  address     String?
+  phone       String?
+  email       String?     @unique
+  doctors     Doctor[]
+  employees   Employee[]
+  patients    Patient[]
+  programs    Program[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }
 
 model Doctor {
   id          String        @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
   name        String
   specialization String?
   email       String?       @unique
@@ -24,6 +45,8 @@ model Doctor {
 
 model Employee {
   id          String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
   name        String
   role        String   // e.g. "Receptionist", "Therapy Assistant"
   email       String?  @unique
@@ -36,6 +59,8 @@ model Employee {
 
 model Patient {
   id          String        @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
   name        String
   age         Int?
   gender      String?
@@ -76,6 +101,8 @@ model Appointment {
 
 model Program {
   id          String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
   patientId   String
   patient     Patient  @relation(fields: [patientId], references: [id])
   name        String   // e.g. "Knee Rehab Program"

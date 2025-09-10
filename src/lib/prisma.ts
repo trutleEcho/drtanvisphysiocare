@@ -1,12 +1,16 @@
 // lib/prisma.ts
-import { prisma as prismaClient } from "./prisma-neon";
+import { PrismaClient } from "@prisma/client";
 
 declare global {
-    // allow global `var` for Prisma across hot reloads
+    // allow global variable across hot reloads in dev
     // eslint-disable-next-line no-var
-    var prisma: typeof prismaClient | undefined;
+    var prisma: PrismaClient | undefined;
 }
 
-export const prisma = global.prisma ?? prismaClient;
+export const prisma =
+    global.prisma ??
+    new PrismaClient({
+        // optional: log: ['query']
+    });
 
 if (process.env.NODE_ENV !== "production") global.prisma = prisma;

@@ -1,20 +1,34 @@
-/*
-  Warnings:
+-- CreateTable
+CREATE TABLE "public"."Organization" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "address" TEXT,
+    "phone" TEXT,
+    "email" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-  - You are about to drop the column `license` on the `Doctor` table. All the data in the column will be lost.
-  - Added the required column `updatedAt` to the `Doctor` table without a default value. This is not possible if the table is not empty.
+    CONSTRAINT "Organization_pkey" PRIMARY KEY ("id")
+);
 
-*/
--- AlterTable
-ALTER TABLE "public"."Doctor" DROP COLUMN "license",
-ADD COLUMN     "specialization" TEXT,
-ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL,
-ALTER COLUMN "phone" DROP NOT NULL,
-ALTER COLUMN "email" DROP NOT NULL;
+-- CreateTable
+CREATE TABLE "public"."Doctor" (
+    "id" TEXT NOT NULL,
+    "organizationId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "specialization" TEXT,
+    "email" TEXT,
+    "phone" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Doctor_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "public"."Employee" (
     "id" TEXT NOT NULL,
+    "organizationId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "role" TEXT NOT NULL,
     "email" TEXT,
@@ -29,6 +43,7 @@ CREATE TABLE "public"."Employee" (
 -- CreateTable
 CREATE TABLE "public"."Patient" (
     "id" TEXT NOT NULL,
+    "organizationId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "age" INTEGER,
     "gender" TEXT,
@@ -70,6 +85,7 @@ CREATE TABLE "public"."Appointment" (
 -- CreateTable
 CREATE TABLE "public"."Program" (
     "id" TEXT NOT NULL,
+    "organizationId" TEXT NOT NULL,
     "patientId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -108,13 +124,28 @@ CREATE TABLE "public"."ProgressNote" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Organization_email_key" ON "public"."Organization"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Doctor_email_key" ON "public"."Doctor"("email");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Employee_email_key" ON "public"."Employee"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Patient_email_key" ON "public"."Patient"("email");
 
 -- AddForeignKey
+ALTER TABLE "public"."Doctor" ADD CONSTRAINT "Doctor_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "public"."Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Employee" ADD CONSTRAINT "Employee_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "public"."Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "public"."Employee" ADD CONSTRAINT "Employee_doctorId_fkey" FOREIGN KEY ("doctorId") REFERENCES "public"."Doctor"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Patient" ADD CONSTRAINT "Patient_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "public"."Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."Patient" ADD CONSTRAINT "Patient_doctorId_fkey" FOREIGN KEY ("doctorId") REFERENCES "public"."Doctor"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -127,6 +158,9 @@ ALTER TABLE "public"."Appointment" ADD CONSTRAINT "Appointment_doctorId_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "public"."Appointment" ADD CONSTRAINT "Appointment_patientId_fkey" FOREIGN KEY ("patientId") REFERENCES "public"."Patient"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Program" ADD CONSTRAINT "Program_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "public"."Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."Program" ADD CONSTRAINT "Program_patientId_fkey" FOREIGN KEY ("patientId") REFERENCES "public"."Patient"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
