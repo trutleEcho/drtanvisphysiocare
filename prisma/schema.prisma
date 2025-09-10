@@ -1,0 +1,137 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL_NON_POOLING")
+}
+
+model Organization {
+  id          String      @id @default(cuid())
+  name        String
+  address     String?
+  phone       String?
+  email       String?     @unique
+  doctors     Doctor[]
+  employees   Employee[]
+  patients    Patient[]
+  programs    Program[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Doctor {
+  id          String        @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name        String
+  specialization String?
+  email       String?       @unique
+  phone       String?
+  employees   Employee[]    @relation("DoctorEmployees")
+  appointments Appointment[]
+  patients     Patient[]     @relation("DoctorPatients")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Employee {
+  id          String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name        String
+  role        String   // e.g. "Receptionist", "Therapy Assistant"
+  email       String?  @unique
+  phone       String?
+  doctorId    String?
+  doctor      Doctor?  @relation("DoctorEmployees", fields: [doctorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Patient {
+  id          String        @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name        String
+  age         Int?
+  gender      String?
+  email       String?       @unique
+  phone       String?
+  address     String?
+  doctorId    String?
+  doctor      Doctor?       @relation("DoctorPatients", fields: [doctorId], references: [id])
+  casePapers  CasePaper[]
+  appointments Appointment[]
+  programs    Program[]
+  progressNotes ProgressNote[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model CasePaper {
+  id          String   @id @default(cuid())
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  diagnosis   String
+  history     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Appointment {
+  id          String   @id @default(cuid())
+  doctorId    String?
+  doctor      Doctor?  @relation(fields: [doctorId], references: [id])
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  dateTime    DateTime
+  status      String   // "Scheduled", "Completed", "Cancelled"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Program {
+  id          String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  name        String   // e.g. "Knee Rehab Program"
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  exercises   Exercise[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Exercise {
+  id          String   @id @default(cuid())
+  programId   String
+  program     Program  @relation(fields: [programId], references: [id])
+  name        String
+  description String?
+  repetitions Int?
+  sets        Int?
+  duration    Int?     // in minutes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProgressNote {
+  id          String   @id @default(cuid())
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  note        String
+  progress    String?  // e.g. "Improved ROM", "Pain reduced"
+  createdAt   DateTime @default(now())
+}

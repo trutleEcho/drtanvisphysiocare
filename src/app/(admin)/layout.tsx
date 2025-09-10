@@ -7,7 +7,7 @@ export default function AdminLayout({children}: {children: React.ReactNode}){
         <>
             <div className="h-screen bg-card hidden md:flex relative">
                 <TopAndSidebar />
-                <main className="flex-1 overflow-auto bg-background rounded-3xl m-2 mt-14">
+                <main className="flex-1 overflow-auto bg-background rounded-t-3xl mt-18">
                     <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
                 </main>
             </div>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Menu, X } from 'lucide-react'
 import {AnimatedThemeToggler} from "@/components/magicui/animated-theme-toggler";
+import Image from "next/image";
 
 interface NavigationItem {
   name: string
@@ -166,10 +167,11 @@ export function HeroLanding(props: HeroLandingProps) {
           <div className="flex lg:flex-1">
             <a href="#" className="-m-1.5 p-1.5">
               <span className="sr-only">{logo?.companyName}</span>
-              <img
-                alt={logo?.alt}
-                src={logo?.src}
-                className="h-6 sm:h-8 w-auto"
+              <Image
+                  src="/Tanvis_Lable.png"
+                  alt="Tanvis PhysioCare"
+                  width={128}
+                  height={128}
               />
             </a>
           </div>

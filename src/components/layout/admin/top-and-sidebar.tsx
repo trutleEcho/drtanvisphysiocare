@@ -1,6 +1,5 @@
 "use client";
 
-import {usePathname} from "next/navigation";
 import {
     LayoutDashboard,
     Users,
@@ -13,10 +12,10 @@ import {
     SidebarBody,
     SidebarLink
 } from "@/components/ui/sidebar";
-import {useState} from "react";
 import Link from "next/link";
 import {Separator} from "@/components/ui/separator";
 import {AnimatedThemeToggler} from "@/components/magicui/animated-theme-toggler";
+import Image from "next/image";
 
 const links = [
     {label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="w-5 h-5"/>},
@@ -45,8 +44,8 @@ export function TopAndSidebar() {
                                 label: "Employee Name",
                                 href: "#",
                                 icon: (
-                                    <img
-                                        src="https://assets.aceternity.com/manu.png"
+                                    <Image
+                                        src="/Tanvis_Favicon.png"
                                         className="h-7 w-7 shrink-0 rounded-full"
                                         width={50}
                                         height={50}
@@ -67,7 +66,14 @@ export function TopAndSidebar() {
                     </div>
                 </SidebarBody>
             </Sidebar>
-            <section className="absolute top-0 right-0 w-full bg-transparent flex justify-end px-5 py-2">
+            <section className="absolute top-0 right-0 w-full bg-transparent flex justify-between p-4">
+                <Image
+                    src="/Tanvis_Lable.png"
+                    alt="Tanvis PhysioCare"
+                    width={128}
+                    height={128}
+                    className="ml-24"
+                />
                 <AnimatedThemeToggler className="p-2 rounded-full hover:bg-accent  bg-background"/>
             </section>
         </>
