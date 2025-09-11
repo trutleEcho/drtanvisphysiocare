@@ -7,7 +7,8 @@ import PageHeader from "@/components/composable/page-header";
 import StatsSection from "@/components/sections/admin/dashboard/stats-section";
 import {ErrorBoundary} from "@/components/error-boundary";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+
     return (
         <>
             <section className="min-h-screen bg-background">

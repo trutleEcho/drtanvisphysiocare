@@ -12,7 +12,6 @@ import {
     SidebarBody,
     SidebarLink
 } from "@/components/ui/sidebar";
-import Link from "next/link";
 import {Separator} from "@/components/ui/separator";
 import {AnimatedThemeToggler} from "@/components/magicui/animated-theme-toggler";
 import Image from "next/image";
@@ -21,11 +20,11 @@ import {router} from "next/client";
 import {Button} from "@/components/ui/button";
 
 const links = [
-    {label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="w-5 h-5"/>},
-    {label: "Patients", href: "/patients", icon: <Users className="w-5 h-5"/>},
-    {label: "Appointments", href: "/appointments", icon: <Calendar className="w-5 h-5"/>},
-    {label: "Case Papers", href: "/case-papers", icon: <FileText className="w-5 h-5"/>},
-    {label: "Programs", href: "/programs", icon: <GraduationCap className="w-5 h-5"/>},
+    {label: "Dashboard", href: "/doc/a/dashboard", icon: <LayoutDashboard className="w-5 h-5"/>},
+    {label: "Patients", href: "/doc/a/patients", icon: <Users className="w-5 h-5"/>},
+    {label: "Appointments", href: "/doc/a/appointments", icon: <Calendar className="w-5 h-5"/>},
+    {label: "Case Papers", href: "/doc/a/case-papers", icon: <FileText className="w-5 h-5"/>},
+    {label: "Programs", href: "/doc/a/programs", icon: <GraduationCap className="w-5 h-5"/>},
 ];
 
 export function TopAndSidebar() {

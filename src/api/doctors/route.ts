@@ -1,11 +1,28 @@
-import { prisma } from "@/lib/prisma"; // or lib/prisma-neon
-export async function GET() {
-    const doctors = await prisma.doctor.findMany();
-    return new Response(JSON.stringify(doctors), { status: 200 });
-}
+import { NextRequest, NextResponse } from "next/server";
+import { getProfileAndRole, getDoctorById } from "@/lib/services/doctorServices"; // adjust path
 
-export async function POST(req: Request) {
-    const body = await req.json();
-    const created = await prisma.doctor.create({ data: body });
-    return new Response(JSON.stringify(created), { status: 201 });
+/**
+ * GET /api/profile?userId=uuid
+ * Returns profile and doctor info (if role=doctor)
+ */
+export async function GET(req: NextRequest) {
+    try {
+        const { searchParams } = new URL(req.url);
+        const userId = searchParams.get("userId");
+
+        if (!userId) {
+            return NextResponse.json(
+                { error: "Missing userId query param" },
+                { status: 400 }
+            );
+        }
+
+        const result = await getProfileAndRole(userId);
+        return NextResponse.json(result, { status: 200 });
+    } catch (error: any) {
+        return NextResponse.json(
+            { error: error.message ?? "Internal server error" },
+            { status: 500 }
+        );
+    }
 }

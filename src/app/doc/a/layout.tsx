@@ -12,6 +12,9 @@ export default async function RootDoctorProtectedLayout({children}: {children: R
         redirect('/doc/u/login')
     }
 
+    const { data: user } = await supabase.auth.getUser()
+    console.info(user)
+
     return (
         <>
             <div className="h-screen bg-card hidden md:flex relative">
