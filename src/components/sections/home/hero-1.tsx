@@ -66,7 +66,7 @@ const defaultProps: Partial<HeroLandingProps> = {
     { name: 'Testimonials', href: '#testimonials' },
   ],
   loginText: "Log in",
-  loginHref: "/u",
+  loginHref: "/auth/login",
   titleSize: "large",
   gradientColors: {
     from: "oklch(0.646 0.222 41.116)",

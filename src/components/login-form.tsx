@@ -16,13 +16,7 @@ import Link from 'next/link'
 import {useRouter} from 'next/navigation'
 import {useState} from 'react'
 
-interface LoginFormProps {
-    loginRedirect: string
-    signUpRedirect?: string
-    forgotPasswordRedirect?: string
-}
-
-export function LoginForm({className, ...props}: LoginFormProps & React.ComponentPropsWithoutRef<'div'>) {
+export function LoginForm({className, ...props}: React.ComponentPropsWithoutRef<'div'>) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState<string | null>(null)
@@ -36,13 +30,24 @@ export function LoginForm({className, ...props}: LoginFormProps & React.Componen
         setError(null)
 
         try {
-            const {error} = await supabase.auth.signInWithPassword({
+            const {data,error} = await supabase.auth.signInWithPassword({
                 email,
                 password,
             })
             if (error) throw error
             // Update this route to redirect to an authenticated route. The user already has an active session.
-            router.push(props.loginRedirect)
+
+            if(data.user?.user_metadata.role === 'doctor'){
+                router.push("/doc")
+            } else if(data.user?.user_metadata.role === 'patient'){
+                router.push("/pat")
+            } else if(data.user?.user_metadata.role === 'organization'){
+                router.push("/org")
+            } else if(data.user?.user_metadata.role === 'employee'){
+                router.push("/emp")
+            } else {
+                router.push("/not-found")
+            }
         } catch (error: unknown) {
             setError(error instanceof Error ? error.message : 'An error occurred')
         } finally {
@@ -74,14 +79,12 @@ export function LoginForm({className, ...props}: LoginFormProps & React.Componen
                             <div className="grid gap-2">
                                 <div className="flex items-center">
                                     <Label htmlFor="password">Password</Label>
-                                    {props.forgotPasswordRedirect && (
                                         <Link
-                                            href={props.forgotPasswordRedirect}
+                                            href="/auth/forgot-password"
                                             className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                                         >
                                             Forgot your password?
                                         </Link>
-                                    )}
                                 </div>
                                 <Input
                                     id="password"
@@ -97,14 +100,12 @@ export function LoginForm({className, ...props}: LoginFormProps & React.Componen
                                 {isLoading ? 'Logging in...' : 'Login'}
                             </Button>
                         </div>
-                        {props.signUpRedirect && (
                             <div className="mt-4 text-center text-sm">
                                 Don&apos;t have an account?{' '}
-                                <Link href={props.signUpRedirect} className="underline underline-offset-4">
+                                <Link href="/auth/sign-up" className="underline underline-offset-4">
                                     Sign up
                                 </Link>
                             </div>
-                        )}
                     </form>
                 </CardContent>
             </Card>

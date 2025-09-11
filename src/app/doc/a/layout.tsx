@@ -9,7 +9,7 @@ export default async function RootDoctorProtectedLayout({children}: {children: R
 
     const { data, error } = await supabase.auth.getClaims()
     if (error || !data?.claims) {
-        redirect('/doc/u/login')
+        redirect('/auth/login')
     }
 
     const { data: user } = await supabase.auth.getUser()
