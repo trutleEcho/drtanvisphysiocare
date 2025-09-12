@@ -16,7 +16,7 @@ import {Separator} from "@/components/ui/separator";
 import {AnimatedThemeToggler} from "@/components/magicui/animated-theme-toggler";
 import Image from "next/image";
 import {createClient} from "@/lib/client";
-import {router} from "next/client";
+import {useRouter} from "next/navigation";
 import {Button} from "@/components/ui/button";
 
 const links = [
@@ -27,12 +27,13 @@ const links = [
     {label: "Programs", href: "/doc/a/programs", icon: <GraduationCap className="w-5 h-5"/>},
 ];
 
-export function TopAndSidebar() {
+export default function TopAndSidebar() {
+    const router = useRouter()
 
     const logout = async () => {
         const supabase = createClient()
         await supabase.auth.signOut()
-        await router.push('/doc')
+        router.push('/auth/login')
     }
 
     return (
