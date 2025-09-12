@@ -1,5 +1,6 @@
 // lib/prisma.ts
-import { PrismaClient } from "@prisma/client";
+
+import {PrismaClient} from "@/generated/prisma";
 
 declare global {
     // allow global variable across hot reloads in dev

@@ -5,6 +5,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Menu, X } from 'lucide-react'
 import {AnimatedThemeToggler} from "@/components/magicui/animated-theme-toggler";
 import Image from "next/image";
+import Link from "next/link";
 
 interface NavigationItem {
   name: string
@@ -65,7 +66,7 @@ const defaultProps: Partial<HeroLandingProps> = {
     { name: 'Testimonials', href: '#testimonials' },
   ],
   loginText: "Log in",
-  loginHref: "#",
+  loginHref: "/auth/login",
   titleSize: "large",
   gradientColors: {
     from: "oklch(0.646 0.222 41.116)",
@@ -197,9 +198,9 @@ export function HeroLanding(props: HeroLandingProps) {
           {loginText && loginHref && (
             <div className="hidden lg:flex lg:flex-1 lg:justify-end gap-4">
               <AnimatedThemeToggler/>
-              <a href={loginHref} className="text-sm/6 font-semibold text-foreground hover:text-muted-foreground transition-colors">
+              <Link href={loginHref} className="text-sm/6 font-semibold text-foreground hover:text-muted-foreground transition-colors">
                 {loginText} <span aria-hidden="true">&rarr;</span>
-              </a>
+              </Link>
             </div>
           )}
         </nav>
