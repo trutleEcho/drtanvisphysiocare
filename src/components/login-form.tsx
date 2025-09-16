@@ -15,13 +15,18 @@ import {Label} from '@/components/ui/label'
 import Link from 'next/link'
 import {useRouter} from 'next/navigation'
 import {useState} from 'react'
+import {useAppDispatch} from "@/lib/store";
+import {setUser} from "@/data/reducers/user-reducer";
+import {User} from "lucide-react";
 
 export function LoginForm({className, ...props}: React.ComponentPropsWithoutRef<'div'>) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(false)
+
     const router = useRouter()
+    const dispatch = useAppDispatch()
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -37,14 +42,20 @@ export function LoginForm({className, ...props}: React.ComponentPropsWithoutRef<
             if (error) throw error
             // Update this route to redirect to an authenticated route. The user already has an active session.
 
+            dispatch(setUser({
+                id: data.user?.id ?? "",
+                email: data.user?.email ?? "",
+                role: data.user?.user_metadata?.role ?? "",
+            }))
+
             if(data.user?.user_metadata.role === 'doctor'){
-                router.push("/doc")
+                router.push("/a/n")
             } else if(data.user?.user_metadata.role === 'patient'){
-                router.push("/pat")
+                router.push("/a/p")
             } else if(data.user?.user_metadata.role === 'organization'){
-                router.push("/org")
+                router.push("/a/m")
             } else if(data.user?.user_metadata.role === 'employee'){
-                router.push("/emp")
+                router.push("/a/o")
             } else {
                 router.push("/not-found")
             }

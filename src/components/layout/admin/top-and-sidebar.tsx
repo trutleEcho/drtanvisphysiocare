@@ -18,22 +18,30 @@ import Image from "next/image";
 import {createClient} from "@/lib/client";
 import {useRouter} from "next/navigation";
 import {Button} from "@/components/ui/button";
+import {useAppDispatch} from "@/lib/store";
+import {clearUser} from "@/data/reducers/user-reducer";
+import {clearDoctor} from "@/data/reducers/doctor-reducer";
 
 const links = [
-    {label: "Dashboard", href: "/doc/a/dashboard", icon: <LayoutDashboard className="w-5 h-5"/>},
-    {label: "Patients", href: "/doc/a/patients", icon: <Users className="w-5 h-5"/>},
-    {label: "Appointments", href: "/doc/a/appointments", icon: <Calendar className="w-5 h-5"/>},
-    {label: "Case Papers", href: "/doc/a/case-papers", icon: <FileText className="w-5 h-5"/>},
-    {label: "Programs", href: "/doc/a/programs", icon: <GraduationCap className="w-5 h-5"/>},
+    {label: "Dashboard", href: "/a/n/dashboard", icon: <LayoutDashboard className="w-5 h-5"/>},
+    {label: "Patients", href: "/a/n/patients", icon: <Users className="w-5 h-5"/>},
+    {label: "Appointments", href: "/a/n/appointments", icon: <Calendar className="w-5 h-5"/>},
+    {label: "Case Papers", href: "/a/n/case-papers", icon: <FileText className="w-5 h-5"/>},
+    {label: "Programs", href: "/a/n/programs", icon: <GraduationCap className="w-5 h-5"/>},
 ];
 
 export default function TopAndSidebar() {
     const router = useRouter()
+    const dispatch = useAppDispatch()
 
     const logout = async () => {
         const supabase = createClient()
         await supabase.auth.signOut()
-        router.push('/auth/login')
+
+        dispatch(clearUser())
+        dispatch(clearDoctor())
+
+        router.replace('/auth/login')
     }
 
     return (

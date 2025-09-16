@@ -4,7 +4,10 @@ import {GeistSans} from "geist/font/sans"
 import {GeistMono} from "geist/font/mono"
 import {Analytics} from "@vercel/analytics/next"
 import "./globals.css"
+import "./common.css"
 import {ThemeProvider} from "@/components/theme-provider";
+import {Toaster} from "@/components/ui/sonner";
+import ReduxProvider from "@/components/providers/ReduxProvider";
 
 export const metadata: Metadata = {
     title: "Dr. Tanvi's",
@@ -18,13 +21,16 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-        <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <ThemeProvider attribute="class"
-                       defaultTheme="dark"
-                       enableSystem
-                       disableTransitionOnChange>
-            {children}
-        </ThemeProvider>
+        <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-background`}>
+        <ReduxProvider>
+            <ThemeProvider attribute="class"
+                           defaultTheme="dark"
+                           enableSystem
+                           disableTransitionOnChange>
+                <Toaster richColors/>
+                {children}
+            </ThemeProvider>
+        </ReduxProvider>
         <Analytics/>
         </body>
         </html>

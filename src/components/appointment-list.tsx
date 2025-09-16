@@ -5,15 +5,24 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { mockAppointments, mockPatients } from "@/lib/db"
-import { Clock, User, Calendar, MoreHorizontal, Edit, Trash2, CheckCircle } from "lucide-react"
+import { appointment } from "@/generated/prisma"
+import { Clock, User, Calendar, MoreHorizontal, Edit, Trash2, CheckCircle, Phone, Mail } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { format } from "date-fns"
+import { appointmentApi, AppointmentWithRelations } from "@/lib/api"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
-export function AppointmentList() {
-  const [appointments] = useState(mockAppointments)
+interface AppointmentListProps {
+  appointments: AppointmentWithRelations[]
+  onRefresh?: () => void
+}
+
+export function AppointmentList({ appointments, onRefresh }: AppointmentListProps) {
+  const router = useRouter()
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "scheduled":
         return "bg-blue-100 text-blue-800"
       case "confirmed":
@@ -27,26 +36,43 @@ export function AppointmentList() {
     }
   }
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case "consultation":
-        return "bg-primary/10 text-primary"
-      case "follow-up":
-        return "bg-secondary/10 text-secondary"
-      case "procedure":
-        return "bg-orange-100 text-orange-800"
-      case "emergency":
-        return "bg-red-100 text-red-800"
-      default:
-        return "bg-gray-100 text-gray-800"
+  const handleStatusUpdate = async (appointmentId: string, newStatus: string) => {
+    try {
+      await appointmentApi.updateAppointment(appointmentId, { status: newStatus })
+      toast.success(`Appointment ${newStatus.toLowerCase()} successfully`)
+      onRefresh?.()
+    } catch (error) {
+      toast.error("Failed to update appointment status")
     }
+  }
+
+  const handleDelete = async (appointmentId: string) => {
+    try {
+      await appointmentApi.deleteAppointment(appointmentId)
+      toast.success("Appointment deleted successfully")
+      onRefresh?.()
+    } catch (error) {
+      toast.error("Failed to delete appointment")
+    }
+  }
+
+  const handleViewPatient = (patientId: string) => {
+    router.push(`/a/n/patients/${patientId}`)
+  }
+
+  if (appointments.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-foreground mb-2">No appointments found</h3>
+        <p className="text-muted-foreground">No appointments match your current filters.</p>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-4">
       {appointments.map((appointment) => {
-        const patient = mockPatients.find((p) => p.id === appointment.patientId)
-
         return (
           <Card key={appointment.id} className="hover:shadow-md transition-shadow">
             <CardContent className="p-6">
@@ -54,15 +80,14 @@ export function AppointmentList() {
                 <div className="flex items-start space-x-4">
                   <Avatar className="h-12 w-12">
                     <AvatarFallback className="bg-primary text-primary-foreground">
-                      {patient?.firstName[0]}
-                      {patient?.lastName[0]}
+                      {appointment.patient?.name?.slice(0, 2).toUpperCase() || "??"}
                     </AvatarFallback>
                   </Avatar>
 
                   <div className="space-y-2">
                     <div>
                       <h3 className="text-lg font-semibold text-foreground">
-                        {patient?.firstName} {patient?.lastName}
+                        {appointment.patient?.name || "Unknown Patient"}
                       </h3>
                       <p className="text-sm text-muted-foreground">Appointment ID: {appointment.id}</p>
                     </div>
@@ -70,26 +95,38 @@ export function AppointmentList() {
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        {new Date(appointment.date).toLocaleDateString()}
+                        {format(new Date(appointment.dateTime), "PPP")}
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
-                        {appointment.time} ({appointment.duration} min)
+                        {format(new Date(appointment.dateTime), "p")}
                       </div>
                       <div className="flex items-center gap-1">
                         <User className="h-4 w-4" />
-                        Dr. Smith
+                        {appointment.doctor?.name || "Dr. Unknown"}
                       </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2 mt-3">
-                      <Badge className={getStatusColor(appointment.status)}>{appointment.status}</Badge>
-                      <Badge className={getTypeColor(appointment.type)}>{appointment.type}</Badge>
+                      <Badge className={getStatusColor(appointment.status)}>
+                        {appointment.status}
+                      </Badge>
                     </div>
 
-                    {appointment.notes && (
-                      <p className="text-sm text-muted-foreground mt-2">Notes: {appointment.notes}</p>
-                    )}
+                    <div className="flex items-center gap-4 mt-3">
+                      {appointment.patient?.phone && (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Phone className="h-4 w-4" />
+                          {appointment.patient.phone}
+                        </div>
+                      )}
+                      {appointment.patient?.email && (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Mail className="h-4 w-4" />
+                          {appointment.patient.email}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -100,17 +137,37 @@ export function AppointmentList() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4" />
-                      Mark Complete
+                    <DropdownMenuItem 
+                      className="flex items-center gap-2"
+                      onClick={() => handleViewPatient(appointment.patientId)}
+                    >
+                      <User className="h-4 w-4" />
+                      View Patient
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2">
-                      <Edit className="h-4 w-4" />
-                      Reschedule
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2 text-destructive">
+                    {appointment.status.toLowerCase() !== "completed" && (
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2"
+                        onClick={() => handleStatusUpdate(appointment.id, "Completed")}
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        Mark Complete
+                      </DropdownMenuItem>
+                    )}
+                    {appointment.status.toLowerCase() !== "cancelled" && (
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2"
+                        onClick={() => handleStatusUpdate(appointment.id, "Cancelled")}
+                      >
+                        <Edit className="h-4 w-4" />
+                        Cancel Appointment
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem 
+                      className="flex items-center gap-2 text-destructive"
+                      onClick={() => handleDelete(appointment.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
-                      Cancel
+                      Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
