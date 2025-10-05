@@ -196,7 +196,7 @@ export function PatientProfile({props}: { props: PatientProfileProps }) {
                                             </CardTitle>
                                         </CardHeader>
                                         <CardContent>
-                                            <PatientStatsChart/>
+                                            <PatientStatsChart patients={[]}/>
                                         </CardContent>
                                     </Card>
                                 </div>
@@ -214,7 +214,7 @@ export function PatientProfile({props}: { props: PatientProfileProps }) {
                                     }}/>
                                     <StatCard props={{
                                         title: "Last Visit",
-                                        value: filteredData.appointments.length > 0 ? filteredData.appointments[filteredData.appointments.length - 1].createdAt.toISOString() : "N/A",
+                                        value: filteredData.appointments.length > 0 ? format(new Date(filteredData.appointments[filteredData.appointments.length - 1].createdAt), "PP pp") : "N/A",
                                         icon: <Clock/>
                                     }}/>
                                     <StatCard props={{
@@ -330,9 +330,11 @@ export function PatientProfile({props}: { props: PatientProfileProps }) {
                                                         >
                                                             <div className="flex justify-between items-start mb-2">
                                                                 <h4 className="font-medium">{program.name}</h4>
-                                                                <Badge variant="outline">
-                                                                    {format(new Date(program.startDate), "MMM yyyy")}
-                                                                </Badge>
+                                                                {program.startDate && (
+                                                                    <Badge variant="outline">
+                                                                        {format(new Date(program.startDate), "MMM yyyy")}
+                                                                    </Badge>
+                                                                )}
                                                             </div>
                                                             {program.description && (
                                                                 <p className="text-sm text-muted-foreground mb-2">
@@ -340,7 +342,9 @@ export function PatientProfile({props}: { props: PatientProfileProps }) {
                                                                 </p>
                                                             )}
                                                             <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                                                <span>Start: {format(new Date(program.startDate), "PPP")}</span>
+                                                                {program.startDate && (
+                                                                    <span>Start: {format(new Date(program.startDate), "PPP")}</span>
+                                                                )}
                                                                 {program.endDate && (
                                                                     <span>End: {format(new Date(program.endDate), "PPP")}</span>
                                                                 )}

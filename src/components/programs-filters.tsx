@@ -16,6 +16,7 @@ interface ProgramsFiltersProps {
 export function ProgramsFilters({ programs, onFilteredProgramsChange, onRefresh }: ProgramsFiltersProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedStatus, setSelectedStatus] = useState("all")
+  const [selectedType, setSelectedType] = useState("all")
 
   const filterPrograms = useCallback(() => {
     if (!programs) return []
@@ -36,8 +37,17 @@ export function ProgramsFilters({ programs, onFilteredProgramsChange, onRefresh 
       filtered = filtered.filter(program => program.status === selectedStatus)
     }
     
+    // Apply type filter
+    if (selectedType !== "all") {
+      if (selectedType === "generic") {
+        filtered = filtered.filter(program => program.patientId === null)
+      } else if (selectedType === "patient-specific") {
+        filtered = filtered.filter(program => program.patientId !== null)
+      }
+    }
+    
     return filtered
-  }, [programs, searchTerm, selectedStatus])
+  }, [programs, searchTerm, selectedStatus, selectedType])
 
   useEffect(() => {
     const filtered = filterPrograms()
@@ -47,11 +57,13 @@ export function ProgramsFilters({ programs, onFilteredProgramsChange, onRefresh 
   const clearFilters = () => {
     setSearchTerm("")
     setSelectedStatus("all")
+    setSelectedType("all")
   }
 
   const activeFiltersCount = [
     searchTerm,
     selectedStatus !== "all",
+    selectedType !== "all",
   ].filter(Boolean).length
 
   return (
@@ -67,6 +79,19 @@ export function ProgramsFilters({ programs, onFilteredProgramsChange, onRefresh 
         />
       </div>
 
+
+      {/* Type Filter */}
+      <Select value={selectedType} onValueChange={setSelectedType}>
+        <SelectTrigger className="w-full sm:w-48">
+          <Target className="h-4 w-4 mr-2" />
+          <SelectValue placeholder="All Types" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Types</SelectItem>
+          <SelectItem value="generic">Generic</SelectItem>
+          <SelectItem value="patient-specific">Patient-Specific</SelectItem>
+        </SelectContent>
+      </Select>
 
       {/* Status Filter */}
       <Select value={selectedStatus} onValueChange={setSelectedStatus}>

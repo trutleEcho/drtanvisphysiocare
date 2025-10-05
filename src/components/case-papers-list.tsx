@@ -22,6 +22,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { casePaperApi } from "@/lib/api"
 import { toast } from "sonner"
 import { format } from "date-fns"
+import { EditCasePaperDialog } from "@/components/edit-case-paper-dialog"
 
 interface CasePapersListProps {
   viewMode: "grid" | "list"
@@ -30,6 +31,8 @@ interface CasePapersListProps {
 }
 
 export function CasePapersList({ viewMode, casePapers, onRefresh }: CasePapersListProps) {
+  const [editingCasePaper, setEditingCasePaper] = useState<any>(null)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
 
   const getFileIcon = (fileType: string) => {
     if (fileType.startsWith("image/")) return ImageIcon
@@ -44,6 +47,17 @@ export function CasePapersList({ viewMode, casePapers, onRefresh }: CasePapersLi
     } catch (error) {
       toast.error("Failed to delete case paper")
     }
+  }
+
+  const handleEdit = (casePaper: any) => {
+    setEditingCasePaper(casePaper)
+    setEditDialogOpen(true)
+  }
+
+  const handleEditSuccess = () => {
+    setEditDialogOpen(false)
+    setEditingCasePaper(null)
+    onRefresh?.()
   }
 
   if (casePapers.length === 0) {
@@ -94,7 +108,10 @@ export function CasePapersList({ viewMode, casePapers, onRefresh }: CasePapersLi
                           <Share className="h-4 w-4" />
                           Share
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center gap-2">
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2"
+                          onClick={() => handleEdit(casePaper)}
+                        >
                           <Edit className="h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
@@ -112,7 +129,15 @@ export function CasePapersList({ viewMode, casePapers, onRefresh }: CasePapersLi
                   {/* Document Info */}
                   <div className="space-y-2">
                     <h3 className="font-semibold text-sm line-clamp-2">{casePaper.diagnosis || "Case Paper"}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{casePaper.history || "No history available"}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {casePaper.history ? 
+                        (casePaper.history.length > 100 ? 
+                          `${casePaper.history.substring(0, 100)}...` : 
+                          casePaper.history
+                        ) : 
+                        "No history available"
+                      }
+                    </p>
                   </div>
 
                   {/* Patient Info */}
@@ -158,7 +183,15 @@ export function CasePapersList({ viewMode, casePapers, onRefresh }: CasePapersLi
                   <div className="space-y-2 flex-1">
                     <div>
                       <h3 className="text-lg font-semibold text-foreground">{casePaper.diagnosis || "Case Paper"}</h3>
-                      <p className="text-sm text-muted-foreground">{casePaper.history || "No history available"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {casePaper.history ? 
+                          (casePaper.history.length > 200 ? 
+                            `${casePaper.history.substring(0, 200)}...` : 
+                            casePaper.history
+                          ) : 
+                          "No history available"
+                        }
+                      </p>
                     </div>
 
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
@@ -198,7 +231,10 @@ export function CasePapersList({ viewMode, casePapers, onRefresh }: CasePapersLi
                         <Share className="h-4 w-4" />
                         Share
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="flex items-center gap-2">
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2"
+                        onClick={() => handleEdit(casePaper)}
+                      >
                         <Edit className="h-4 w-4" />
                         Edit Details
                       </DropdownMenuItem>
@@ -217,6 +253,16 @@ export function CasePapersList({ viewMode, casePapers, onRefresh }: CasePapersLi
           </Card>
         )
       })}
+      
+      {/* Edit Dialog */}
+      {editingCasePaper && (
+        <EditCasePaperDialog
+          casePaper={editingCasePaper}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </div>
   )
 }

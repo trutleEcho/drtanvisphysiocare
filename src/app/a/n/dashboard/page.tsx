@@ -9,9 +9,43 @@ import PageHeader from "@/components/composable/page-header";
 import StatsSection from "@/components/sections/admin/dashboard/stats-section";
 import {ErrorBoundary} from "@/components/error-boundary";
 import {useAppSelector} from "@/lib/store";
+import {toast} from "sonner";
+import {useRouter} from "next/navigation";
+import {DoctorDashboard} from "@/data/models/doctor/dashboard-data";
 
 export default function DashboardPage() {
     const doctor = useAppSelector((state) => state.doctor)
+    const router = useRouter()
+
+    const [isLoading,setIsLoading] = useState(false)
+    const [dashboardData,setDashboardData] = useState<DoctorDashboard>()
+
+    async function fetchDashboardData() {
+        try {
+            setIsLoading(true)
+            const response = await fetch(`/api/dashboard?id=${doctor.id}`)
+            const data : DoctorDashboard = await response.json()
+            setDashboardData(data)
+
+            if (data) {
+                toast.success("Dashboard Data Fetched")
+            } else {
+                toast.error("Dashboard Data Not Found")
+            }
+
+        } catch (error: any) {
+            toast.error("Failed to load program: " + error.message)
+            router.push("/a/n/programs")
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        if (doctor.id){
+            fetchDashboardData()
+        }
+    }, [doctor.id]);
 
     return (
         <>
@@ -30,7 +64,7 @@ export default function DashboardPage() {
                     )}
                     <ErrorBoundary>
                         <Suspense fallback={<div className="h-96 bg-card rounded-2xl animate-pulse shadow-lg"/>}>
-                            <StatsSection/>
+                            <StatsSection dashboardData={dashboardData}/>
                         </Suspense>
                     </ErrorBoundary>
 
@@ -39,7 +73,7 @@ export default function DashboardPage() {
                             <Suspense fallback={<div className="h-96 bg-card rounded-2xl animate-pulse shadow-lg"/>}>
                                 <div
                                     className="bg-card rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
-                                    <PatientStatsChart/>
+                                    <PatientStatsChart patients={[]}/>
                                 </div>
                             </Suspense>
                         </ErrorBoundary>

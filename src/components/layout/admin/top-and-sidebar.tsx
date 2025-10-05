@@ -18,7 +18,7 @@ import Image from "next/image";
 import {createClient} from "@/lib/client";
 import {useRouter} from "next/navigation";
 import {Button} from "@/components/ui/button";
-import {useAppDispatch} from "@/lib/store";
+import {useAppDispatch, useAppSelector} from "@/lib/store";
 import {clearUser} from "@/data/reducers/user-reducer";
 import {clearDoctor} from "@/data/reducers/doctor-reducer";
 
@@ -33,6 +33,8 @@ const links = [
 export default function TopAndSidebar() {
     const router = useRouter()
     const dispatch = useAppDispatch()
+    const organization = useAppSelector((state) => state.organization)
+    const doctor = useAppSelector((state) => state.doctor)
 
     const logout = async () => {
         const supabase = createClient()
@@ -49,8 +51,7 @@ export default function TopAndSidebar() {
             <Sidebar>
                 <SidebarBody className="justify-between gap-10">
                     <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-                        {/*<Logo/>*/}
-                        <div className="mt-24 flex flex-col gap-2">
+                        <div className="mt-18 flex flex-col gap-2">
                             {links.map((link, idx) => (
                                 <SidebarLink key={idx} link={link}/>
                             ))}
@@ -58,15 +59,16 @@ export default function TopAndSidebar() {
                     </div>
                     <div>
                         <SidebarLink
+                            className="flex flex-row items-center justify-around bg-secondary/20 rounded-full"
                             link={{
-                                label: "Employee Name",
+                                label: `${doctor.name}`,
                                 href: "#",
                                 icon: (
                                     <Image
-                                        src="/Tanvis_Favicon.png"
-                                        className="h-7 w-7 shrink-0 rounded-full"
-                                        width={50}
-                                        height={50}
+                                        src={'/avatar.png'}
+                                        className="h-5 w-5 shrink-0 rounded-full"
+                                        width={100}
+                                        height={100}
                                         alt="Avatar"
                                     />
                                 ),
@@ -81,18 +83,22 @@ export default function TopAndSidebar() {
                         {/*    }}*/}
                         {/*    className="justify-center"*/}
                         {/*></SidebarLink>*/}
-                        <Button onClick={logout} className="text-red-500 flex flex-row items-center justify-center gap-5 " variant="ghost"><LogOut className="w-5 h-5 text-red-500"/><span>Logout</span></Button>
+                        <Button onClick={logout}
+                                className="text-red-500 flex flex-row items-center justify-center gap-5 w-full"
+                                variant="ghost"><LogOut className="w-5 h-5 text-red-500"/><span>Logout</span></Button>
                     </div>
                 </SidebarBody>
             </Sidebar>
             <section className="absolute top-0 right-0 w-full bg-transparent flex justify-between p-4">
-                <Image
-                    src="/Tanvis_Lable.png"
-                    alt="Tanvis PhysioCare"
-                    width={128}
-                    height={128}
-                    className="ml-2"
-                />
+                {organization.logo && (
+                    <Image
+                        src={organization.logo}
+                        alt="Arogyam"
+                        width={128}
+                        height={128}
+                        className="ml-2"
+                    />
+                )}
                 <AnimatedThemeToggler className="p-2 rounded-full hover:bg-accent  bg-background"/>
             </section>
         </>

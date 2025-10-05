@@ -5,16 +5,18 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux"
 
 import userReducer from "@/data/reducers/user-reducer"
 import doctorReducer from "@/data/reducers/doctor-reducer"
+import organizationReducer from "@/data/reducers/organization-reducer";
 
 const rootReducer = combineReducers({
     user: userReducer,
     doctor: doctorReducer,
+    organization: organizationReducer,
 })
 
 const persistConfig = {
     key: "root",
     storage,
-    whitelist: ["user", "doctor"], // ✅ choose which slices to persist
+    whitelist: ["user", "doctor", "organization"], // ✅ choose which slices to persist
 }
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)

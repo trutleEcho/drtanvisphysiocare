@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,9 +20,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, Trash2 } from "lucide-react"
+import { programApi, patientApi } from "@/lib/api"
+import { useAppSelector } from "@/lib/store"
+import { toast } from "sonner"
+import { AnimatedSubscribeButton } from "@/components/magicui/animated-subscribe-button"
 
 interface CreateProgramDialogProps {
   children: React.ReactNode
+  onSuccess?: () => void
 }
 
 interface Exercise {
@@ -35,13 +40,18 @@ interface Exercise {
   instructions: string[]
 }
 
-export function CreateProgramDialog({ children }: CreateProgramDialogProps) {
+export function CreateProgramDialog({ children, onSuccess }: CreateProgramDialogProps) {
+  const doctor = useAppSelector((state) => state.doctor)
   const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [patients, setPatients] = useState<any[]>([])
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    category: "",
-    duration: "",
+    isGeneric: true,
+    patientId: "",
+    startDate: "",
+    endDate: "",
   })
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [currentExercise, setCurrentExercise] = useState({
@@ -53,19 +63,75 @@ export function CreateProgramDialog({ children }: CreateProgramDialogProps) {
     instructions: "",
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (open && doctor.id) {
+      fetchPatients()
+    }
+  }, [open, doctor.id])
+
+  const fetchPatients = async () => {
+    try {
+      const patientsData = await patientApi.getPatients(doctor.id)
+      setPatients(patientsData)
+    } catch (error) {
+      console.error("Failed to fetch patients:", error)
+      toast.error("Failed to load patients")
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission here
-    console.log("Program data:", { ...formData, exercises })
-    setOpen(false)
-    // Reset form
-    setFormData({
-      name: "",
-      description: "",
-      category: "",
-      duration: "",
-    })
-    setExercises([])
+    
+    if (!formData.name.trim()) {
+      toast.error("Program name is required")
+      return
+    }
+
+    if (!formData.isGeneric && !formData.patientId) {
+      toast.error("Please select a patient for patient-specific programs")
+      return
+    }
+
+    try {
+      setLoading(true)
+      const organizationId = "org1" // This should come from doctor's organization
+      
+      const programData = {
+        organizationId,
+        name: formData.name,
+        description: formData.description || undefined,
+        patientId: formData.isGeneric ? undefined : formData.patientId,
+        startDate: formData.startDate ? new Date(formData.startDate) : new Date(),
+        endDate: formData.endDate ? new Date(formData.endDate) : undefined,
+        isGeneric: formData.isGeneric
+      }
+
+      const newProgram = await programApi.createProgram(programData)
+      
+      if (newProgram) {
+        toast.success("Program created successfully!")
+        setOpen(false)
+        onSuccess?.()
+        
+        // Reset form
+        setFormData({
+          name: "",
+          description: "",
+          isGeneric: true,
+          patientId: "",
+          startDate: "",
+          endDate: "",
+        })
+        setExercises([])
+      } else {
+        toast.error("Failed to create program")
+      }
+    } catch (error: any) {
+      console.error("Error creating program:", error)
+      toast.error("Failed to create program: " + (error.message || "Unknown error"))
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleInputChange = (field: string, value: string) => {
@@ -140,33 +206,66 @@ export function CreateProgramDialog({ children }: CreateProgramDialogProps) {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Program Type</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      checked={formData.isGeneric}
+                      onChange={() => handleInputChange("isGeneric", "true")}
+                      className="rounded"
+                    />
+                    <span>Generic (can be applied to multiple patients)</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      checked={!formData.isGeneric}
+                      onChange={() => handleInputChange("isGeneric", "false")}
+                      className="rounded"
+                    />
+                    <span>Patient-Specific</span>
+                  </label>
+                </div>
+              </div>
+
+              {!formData.isGeneric && (
                 <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
+                  <Label htmlFor="patientId">Select Patient</Label>
+                  <Select value={formData.patientId} onValueChange={(value) => handleInputChange("patientId", value)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder="Select a patient" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="rehabilitation">Rehabilitation</SelectItem>
-                      <SelectItem value="fitness">Fitness</SelectItem>
-                      <SelectItem value="therapy">Therapy</SelectItem>
-                      <SelectItem value="recovery">Recovery</SelectItem>
-                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                      {patients.map((patient) => (
+                        <SelectItem key={patient.id} value={patient.id}>
+                          {patient.name} - {patient.email || patient.phone || "No contact info"}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="startDate">Start Date</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => handleInputChange("startDate", e.target.value)}
+                  />
+                </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="duration">Duration (weeks)</Label>
+                  <Label htmlFor="endDate">End Date (Optional)</Label>
                   <Input
-                    id="duration"
-                    type="number"
-                    value={formData.duration}
-                    onChange={(e) => handleInputChange("duration", e.target.value)}
-                    placeholder="8"
-                    min="1"
-                    max="52"
+                    id="endDate"
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => handleInputChange("endDate", e.target.value)}
                   />
                 </div>
               </div>
@@ -284,9 +383,10 @@ export function CreateProgramDialog({ children }: CreateProgramDialogProps) {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!formData.name || exercises.length === 0}>
-              Create Program
-            </Button>
+            <AnimatedSubscribeButton subscribeStatus={loading}>
+              <span>Create Program</span>
+              <span>Creating...</span>
+            </AnimatedSubscribeButton>
           </DialogFooter>
         </form>
       </DialogContent>

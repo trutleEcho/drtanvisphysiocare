@@ -17,6 +17,7 @@ datasource db {
 model organization {
   id          String      @id @default(cuid())
   name        String
+  logo        String?
   address     String?
   phone       String?
   email       String?     @unique
@@ -24,12 +25,14 @@ model organization {
   employees   employee[]
   patients    patient[]
   programs    program[]
+  exerciseTemplates exerciseTemplate[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
 
 model doctor {
   id          String        @id @default(cuid())
+  avatar      String?
   organizationId String
   organization   organization @relation(fields: [organizationId], references: [id])
   name        String
@@ -39,6 +42,9 @@ model doctor {
   employees   employee[]    @relation("DoctorEmployees")
   appointments appointment[]
   patients     patient[]     @relation("DoctorPatients")
+  programs    program[]
+  progressNotes progressNote[]
+  casePapers  casePaper[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -85,6 +91,8 @@ model casePaper {
   history     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  doctor doctor[]
 }
 
 model appointment {
@@ -95,6 +103,8 @@ model appointment {
   patient     patient  @relation(fields: [patientId], references: [id])
   dateTime    DateTime
   status      String   // "Scheduled", "Completed", "Cancelled"
+  notes       String?
+  consultationFee Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -103,28 +113,65 @@ model program {
   id          String   @id @default(cuid())
   organizationId String
   organization   organization @relation(fields: [organizationId], references: [id])
-  patientId   String
-  patient     patient  @relation(fields: [patientId], references: [id])
+  patientId   String?
+  patient     patient?  @relation(fields: [patientId], references: [id])
   name        String   // e.g. "Knee Rehab Program"
   description String?
-  startDate   DateTime
+  startDate   DateTime?
   endDate     DateTime?
+  weekNumber  Int?
+  workouts    workout[]
   exercises   exercise[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  doctor doctor[]
+}
+
+model workout {
+  id          String   @id @default(cuid())
+  programId   String
+  program     program?  @relation(fields: [programId], references: [id])
+  exercises   exercise[]
+  date        DateTime?
+  weekNumber  Int?
+  duration    Int?     // in minutes
+  intensity   String   // e.g. "Low", "Moderate", "High"
+  notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
 model exercise {
   id          String   @id @default(cuid())
-  programId   String
-  program     program  @relation(fields: [programId], references: [id])
+  programId   String?
+  program     program?  @relation(fields: [programId], references: [id])
+  workoutId   String?
+  workout     workout?  @relation(fields: [workoutId], references: [id])
   name        String
   description String?
   repetitions Int?
   sets        Int?
   duration    Int?     // in minutes
+  youtubeLink String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model exerciseTemplate {
+  id            String   @id @default(cuid())
+  organizationId String
+  organization   organization @relation(fields: [organizationId], references: [id])
+  name          String
+  description   String?
+  category      String?
+  repetitions   Int?
+  sets          Int?
+  duration      Int?     // in minutes
+  youtubeLink   String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model progressNote {
@@ -134,4 +181,6 @@ model progressNote {
   note        String
   progress    String?  // e.g. "Improved ROM", "Pain reduced"
   createdAt   DateTime @default(now())
+
+  doctor doctor[]
 }

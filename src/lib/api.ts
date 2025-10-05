@@ -97,21 +97,26 @@ export const patientApi = {
 
 // Program API functions
 export const programApi = {
-  async getPrograms(organizationId: string, patientId?: string): Promise<any[]> {
-    const url = patientId 
-      ? `/api/programs?organizationId=${organizationId}&patientId=${patientId}`
-      : `/api/programs?organizationId=${organizationId}`
-    const response = await fetch(url)
+  async getPrograms(organizationId: string, options?: {
+    patientId?: string
+    type?: 'generic' | 'patient-specific'
+  }): Promise<any[]> {
+    const params = new URLSearchParams({ organizationId })
+    if (options?.patientId) params.append('patientId', options.patientId)
+    if (options?.type) params.append('type', options.type)
+    
+    const response = await fetch(`/api/programs?${params}`)
     return handleResponse<any[]>(response)
   },
 
   async createProgram(data: {
     organizationId: string
-    patientId: string
+    patientId?: string
     name: string
     description?: string
-    startDate: Date
+    startDate?: Date
     endDate?: Date
+    isGeneric?: boolean
   }) {
     const response = await fetch('/api/programs', {
       method: 'POST',
@@ -120,7 +125,7 @@ export const programApi = {
       },
       body: JSON.stringify({
         ...data,
-        startDate: data.startDate.toISOString(),
+        startDate: data.startDate?.toISOString(),
         ...(data.endDate && { endDate: data.endDate.toISOString() })
       })
     })
@@ -132,6 +137,8 @@ export const programApi = {
     description?: string
     startDate?: Date
     endDate?: Date
+    patientId?: string | null
+    status?: string
   }) {
     const response = await fetch(`/api/programs/${id}`, {
       method: 'PUT',
@@ -147,8 +154,142 @@ export const programApi = {
     return handleResponse(response)
   },
 
+  async assignProgramToPatient(programId: string, patientId: string) {
+    const response = await fetch(`/api/programs/${programId}/assign`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ patientId })
+    })
+    return handleResponse(response)
+  },
+
+  async unassignProgramFromPatient(programId: string) {
+    const response = await fetch(`/api/programs/${programId}/unassign`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    return handleResponse(response)
+  },
+
   async deleteProgram(id: string) {
     const response = await fetch(`/api/programs/${id}`, {
+      method: 'DELETE',
+    })
+    return handleResponse(response)
+  }
+}
+
+// Exercise API functions
+export const exerciseApi = {
+  async getExercises(organizationId: string, programId?: string): Promise<any[]> {
+    const params = new URLSearchParams({ organizationId })
+    if (programId) params.append('programId', programId)
+    
+    const response = await fetch(`/api/exercises?${params}`)
+    return handleResponse<any[]>(response)
+  },
+
+  async createExercise(data: {
+    programId: string
+    name: string
+    description?: string
+    repetitions?: number
+    sets?: number
+    duration?: number
+    youtubeLink?: string
+  }) {
+    const response = await fetch('/api/exercises', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    })
+    return handleResponse(response)
+  },
+
+  async updateExercise(id: string, data: {
+    name?: string
+    description?: string
+    repetitions?: number
+    sets?: number
+    duration?: number
+    youtubeLink?: string
+  }) {
+    const response = await fetch(`/api/exercises/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    })
+    return handleResponse(response)
+  },
+
+  async deleteExercise(id: string) {
+    const response = await fetch(`/api/exercises/${id}`, {
+      method: 'DELETE',
+    })
+    return handleResponse(response)
+  }
+}
+
+// Exercise Template API functions
+export const exerciseTemplateApi = {
+  async getExerciseTemplates(organizationId: string, category?: string): Promise<any[]> {
+    const params = new URLSearchParams({ organizationId })
+    if (category) params.append('category', category)
+    
+    const response = await fetch(`/api/exercise-templates?${params}`)
+    return handleResponse<any[]>(response)
+  },
+
+  async createExerciseTemplate(data: {
+    organizationId: string
+    name: string
+    description?: string
+    category?: string
+    repetitions?: number
+    sets?: number
+    duration?: number
+    youtubeLink?: string
+  }) {
+    const response = await fetch('/api/exercise-templates', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    })
+    return handleResponse(response)
+  },
+
+  async updateExerciseTemplate(id: string, data: {
+    name?: string
+    description?: string
+    category?: string
+    repetitions?: number
+    sets?: number
+    duration?: number
+    youtubeLink?: string
+    isActive?: boolean
+  }) {
+    const response = await fetch(`/api/exercise-templates/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    })
+    return handleResponse(response)
+  },
+
+  async deleteExerciseTemplate(id: string) {
+    const response = await fetch(`/api/exercise-templates/${id}`, {
       method: 'DELETE',
     })
     return handleResponse(response)

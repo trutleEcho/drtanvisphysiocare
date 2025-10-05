@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { patientId, diagnosis, history } = body
+    const { patientId, diagnosis, history, type = "text" } = body
 
     if (!patientId || !diagnosis) {
       return NextResponse.json(
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const casePaper = await createCasePaper({
       patientId,
       diagnosis,
-      history
+      history: history || null
     })
 
     return NextResponse.json(casePaper, { status: 201 })

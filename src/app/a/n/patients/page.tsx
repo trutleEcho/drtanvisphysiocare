@@ -8,25 +8,20 @@ import {InteractiveHoverButton} from "@/components/magicui/interactive-hover-but
 import {ErrorBoundary} from "@/components/error-boundary";
 import PageHeader from "@/components/composable/page-header";
 import {toast} from "sonner";
-import {getPatients} from "@/data/services/patientServices";
+import {patientApi} from "@/lib/api";
 import {useAppSelector} from "@/lib/store";
-import {patient} from "@/generated/prisma";
 
-export default async function PatientsPage() {
+export default function PatientsPage() {
     const doctor = useAppSelector((state) => state.doctor)
 
-    const [patientsList, setPatientsList] = useState<patient[]>([])
-    const [filteredPatients, setFilteredPatients] = useState<patient[]>([])
+    const [patientsList, setPatientsList] = useState<any[]>([])
+    const [filteredPatients, setFilteredPatients] = useState<any[]>([])
     const [loading, setLoading] = useState(false)
 
     async function fetchPatients() {
         try {
             setLoading(true)
-            const patients = await getPatients({
-                where: {
-                    doctorId: doctor.id
-                }
-            })
+            const patients = await patientApi.getPatients(doctor.id)
             console.log(patients)
             if (patients.length > 0) {
                 setPatientsList(patients)
@@ -62,7 +57,6 @@ export default async function PatientsPage() {
                 },
                 actions: <ErrorBoundary>
                     <AddPatientDialog props={{
-                        doctorId: doctor.id,
                         refetch: fetchPatients,
                         children: <InteractiveHoverButton className="flex items-center gap-2">Add Patient</InteractiveHoverButton>
                     }}/>

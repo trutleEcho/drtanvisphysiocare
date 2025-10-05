@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { setDoctor } from "@/data/reducers/doctor-reducer"
 import { getDoctorByEmail } from "@/data/services/doctorServices"
+import {setOrganization} from "@/data/reducers/organization-reducer";
 
 export default function DoctorPage() {
     const user = useAppSelector((state) => state.user)
@@ -35,6 +36,7 @@ export default function DoctorPage() {
                 }
 
                 dispatch(setDoctor(data))
+                dispatch(setOrganization(data.organization))
                 toast.success("Doctor Data Fetched")
                 return data
             } catch (err) {

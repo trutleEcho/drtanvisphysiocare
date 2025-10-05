@@ -4,9 +4,10 @@ import { Suspense, useEffect, useState } from "react"
 import { CasePapersList } from "@/components/case-papers-list"
 import { CasePapersFilters } from "@/components/case-papers-filters"
 import { UploadDocumentDialog } from "@/components/upload-document-dialog"
+import { AddCasePaperDialog } from "@/components/add-case-paper-dialog"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Upload, Grid, List } from "lucide-react"
+import { Upload, Grid, List, FileText, Plus } from "lucide-react"
 import { casePaperApi, patientApi } from "@/lib/api"
 import { useAppSelector } from "@/lib/store"
 import { toast } from "sonner"
@@ -78,14 +79,24 @@ export default function CasePapersPage() {
           pagesHref: ["/a/n/case-papers"]
         },
         actions: (
-          <ErrorBoundary>
-            <UploadDocumentDialog onSuccess={fetchCasePapers}>
-              <InteractiveHoverButton className="flex items-center gap-2">
-                <Upload className="h-4 w-4" />
-                Upload Document
-              </InteractiveHoverButton>
-            </UploadDocumentDialog>
-          </ErrorBoundary>
+          <div className="flex items-center gap-2">
+            <ErrorBoundary>
+              <AddCasePaperDialog onSuccess={fetchCasePapers}>
+                <InteractiveHoverButton className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Add Case Paper
+                </InteractiveHoverButton>
+              </AddCasePaperDialog>
+            </ErrorBoundary>
+            <ErrorBoundary>
+              <UploadDocumentDialog onSuccess={fetchCasePapers}>
+                <InteractiveHoverButton className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload Document
+                </InteractiveHoverButton>
+              </UploadDocumentDialog>
+            </ErrorBoundary>
+          </div>
         )
       }} />
 

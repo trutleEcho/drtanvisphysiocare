@@ -1,6 +1,15 @@
+// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    reactStrictMode: true,
-};
+    images: {
+        remotePatterns: [
+            {
+                protocol: "https",
+                hostname: "xlsfmgwgynfcunecrzvj.supabase.co",
+                pathname: "/storage/v1/object/public/**", // allow all public storage objects
+            },
+        ],
+    },
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig

@@ -7,13 +7,15 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    const { name, description, startDate, endDate } = body
+    const { name, description, startDate, endDate, patientId, status } = body
 
     const program = await updateProgram(params.id, {
       ...(name && { name }),
       ...(description && { description }),
       ...(startDate && { startDate: new Date(startDate) }),
-      ...(endDate && { endDate: new Date(endDate) })
+      ...(endDate && { endDate: new Date(endDate) }),
+      ...(patientId !== undefined && { patientId }),
+      ...(status && { status })
     })
 
     return NextResponse.json(program)
