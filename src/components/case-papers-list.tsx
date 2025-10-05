@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { mockCasePapers, mockPatients } from "@/lib/db"
 import {
   FileText,
   ImageIcon,
@@ -20,36 +19,65 @@ import {
   Share,
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { casePaperApi } from "@/lib/api"
+import { toast } from "sonner"
+import { format } from "date-fns"
+import { EditCasePaperDialog } from "@/components/edit-case-paper-dialog"
 
 interface CasePapersListProps {
   viewMode: "grid" | "list"
+  casePapers: any[]
+  onRefresh?: () => void
 }
 
-export function CasePapersList({ viewMode }: CasePapersListProps) {
-  const [documents] = useState(mockCasePapers)
+export function CasePapersList({ viewMode, casePapers, onRefresh }: CasePapersListProps) {
+  const [editingCasePaper, setEditingCasePaper] = useState<any>(null)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
 
   const getFileIcon = (fileType: string) => {
     if (fileType.startsWith("image/")) return ImageIcon
     return FileText
   }
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes"
-    const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+  const handleDelete = async (casePaperId: string) => {
+    try {
+      await casePaperApi.deleteCasePaper(casePaperId)
+      toast.success("Case paper deleted successfully")
+      onRefresh?.()
+    } catch (error) {
+      toast.error("Failed to delete case paper")
+    }
+  }
+
+  const handleEdit = (casePaper: any) => {
+    setEditingCasePaper(casePaper)
+    setEditDialogOpen(true)
+  }
+
+  const handleEditSuccess = () => {
+    setEditDialogOpen(false)
+    setEditingCasePaper(null)
+    onRefresh?.()
+  }
+
+  if (casePapers.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-foreground mb-2">No Case Papers Found</h3>
+        <p className="text-muted-foreground">Upload your first document to get started.</p>
+      </div>
+    )
   }
 
   if (viewMode === "grid") {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {documents.map((document) => {
-          const patient = mockPatients.find((p) => p.id === document.patientId)
-          const FileIcon = getFileIcon(document.fileType)
+        {casePapers.map((casePaper) => {
+          const FileIcon = FileText // Default to FileText for case papers
 
           return (
-            <Card key={document.id} className="hover:shadow-md transition-shadow group">
+            <Card key={casePaper.id} className="hover:shadow-md transition-shadow group">
               <CardContent className="p-4">
                 <div className="space-y-3">
                   {/* File Icon and Actions */}
@@ -80,11 +108,17 @@ export function CasePapersList({ viewMode }: CasePapersListProps) {
                           <Share className="h-4 w-4" />
                           Share
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center gap-2">
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2"
+                          onClick={() => handleEdit(casePaper)}
+                        >
                           <Edit className="h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="flex items-center gap-2 text-destructive">
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 text-destructive"
+                          onClick={() => handleDelete(casePaper.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
@@ -94,41 +128,34 @@ export function CasePapersList({ viewMode }: CasePapersListProps) {
 
                   {/* Document Info */}
                   <div className="space-y-2">
-                    <h3 className="font-semibold text-sm line-clamp-2">{document.title}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{document.description}</p>
+                    <h3 className="font-semibold text-sm line-clamp-2">{casePaper.diagnosis || "Case Paper"}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {casePaper.history ? 
+                        (casePaper.history.length > 100 ? 
+                          `${casePaper.history.substring(0, 100)}...` : 
+                          casePaper.history
+                        ) : 
+                        "No history available"
+                      }
+                    </p>
                   </div>
 
                   {/* Patient Info */}
                   <div className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
                       <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                        {patient?.firstName[0]}
-                        {patient?.lastName[0]}
+                        {casePaper.patient?.name?.charAt(0) || "P"}
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-xs text-muted-foreground">
-                      {patient?.firstName} {patient?.lastName}
+                      {casePaper.patient?.name || "Unknown Patient"}
                     </span>
-                  </div>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-1">
-                    {document.tags.slice(0, 2).map((tag, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs px-2 py-0">
-                        {tag}
-                      </Badge>
-                    ))}
-                    {document.tags.length > 2 && (
-                      <Badge variant="outline" className="text-xs px-2 py-0">
-                        +{document.tags.length - 2}
-                      </Badge>
-                    )}
                   </div>
 
                   {/* Date */}
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
-                    {new Date(document.createdAt).toLocaleDateString()}
+                    {format(new Date(casePaper.createdAt), "MMM dd, yyyy")}
                   </div>
                 </div>
               </CardContent>
@@ -141,12 +168,11 @@ export function CasePapersList({ viewMode }: CasePapersListProps) {
 
   return (
     <div className="space-y-4">
-      {documents.map((document) => {
-        const patient = mockPatients.find((p) => p.id === document.patientId)
-        const FileIcon = getFileIcon(document.fileType)
+      {casePapers.map((casePaper) => {
+        const FileIcon = FileText
 
         return (
-          <Card key={document.id} className="hover:shadow-md transition-shadow">
+          <Card key={casePaper.id} className="hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-4">
@@ -156,31 +182,31 @@ export function CasePapersList({ viewMode }: CasePapersListProps) {
 
                   <div className="space-y-2 flex-1">
                     <div>
-                      <h3 className="text-lg font-semibold text-foreground">{document.title}</h3>
-                      <p className="text-sm text-muted-foreground">{document.description}</p>
+                      <h3 className="text-lg font-semibold text-foreground">{casePaper.diagnosis || "Case Paper"}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {casePaper.history ? 
+                          (casePaper.history.length > 200 ? 
+                            `${casePaper.history.substring(0, 200)}...` : 
+                            casePaper.history
+                          ) : 
+                          "No history available"
+                        }
+                      </p>
                     </div>
 
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <User className="h-4 w-4" />
-                        {patient?.firstName} {patient?.lastName}
+                        {casePaper.patient?.name || "Unknown Patient"}
                       </div>
                       <div className="flex items-center gap-1">
                         <FileType className="h-4 w-4" />
-                        {document.fileType}
+                        Case Paper
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        {new Date(document.createdAt).toLocaleDateString()}
+                        {format(new Date(casePaper.createdAt), "MMM dd, yyyy")}
                       </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      {document.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
                     </div>
                   </div>
                 </div>
@@ -205,11 +231,17 @@ export function CasePapersList({ viewMode }: CasePapersListProps) {
                         <Share className="h-4 w-4" />
                         Share
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="flex items-center gap-2">
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2"
+                        onClick={() => handleEdit(casePaper)}
+                      >
                         <Edit className="h-4 w-4" />
                         Edit Details
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="flex items-center gap-2 text-destructive">
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2 text-destructive"
+                        onClick={() => handleDelete(casePaper.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                         Delete
                       </DropdownMenuItem>
@@ -221,6 +253,16 @@ export function CasePapersList({ viewMode }: CasePapersListProps) {
           </Card>
         )
       })}
+      
+      {/* Edit Dialog */}
+      {editingCasePaper && (
+        <EditCasePaperDialog
+          casePaper={editingCasePaper}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </div>
   )
 }

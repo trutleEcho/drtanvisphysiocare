@@ -1,36 +1,63 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Search, Filter, Calendar, FileType, User, Tag } from "lucide-react"
+import { Search, Filter, Calendar, FileType, User, Tag, RefreshCw } from "lucide-react"
 
-export function CasePapersFilters() {
+interface CasePapersFiltersProps {
+  casePapers: any[]
+  onFilteredCasePapersChange: (filteredCasePapers: any[]) => void
+  onRefresh: () => void
+}
+
+export function CasePapersFilters({ casePapers, onFilteredCasePapersChange, onRefresh }: CasePapersFiltersProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedPatient, setSelectedPatient] = useState("all")
-  const [selectedFileType, setSelectedFileType] = useState("all")
-  const [selectedDateRange, setSelectedDateRange] = useState("all")
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
+
+  const filterCasePapers = useCallback(() => {
+    if (!casePapers) return []
+    
+    let filtered = [...casePapers]
+    
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(casePaper =>
+        casePaper.diagnosis?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        casePaper.history?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        casePaper.patient?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+    
+    // Apply patient filter
+    if (selectedPatient !== "all") {
+      filtered = filtered.filter(casePaper => casePaper.patientId === selectedPatient)
+    }
+    
+    return filtered
+  }, [casePapers, searchTerm, selectedPatient])
+
+  useEffect(() => {
+    const filtered = filterCasePapers()
+    onFilteredCasePapersChange(filtered)
+  }, [filterCasePapers, onFilteredCasePapersChange])
 
   const clearFilters = () => {
     setSearchTerm("")
     setSelectedPatient("all")
-    setSelectedFileType("all")
-    setSelectedDateRange("all")
-    setSelectedTags([])
   }
 
   const activeFiltersCount = [
     searchTerm,
     selectedPatient !== "all",
-    selectedFileType !== "all",
-    selectedDateRange !== "all",
-    selectedTags.length > 0,
   ].filter(Boolean).length
 
-  const availableTags = ["Lab Results", "X-Ray", "MRI", "Prescription", "Insurance", "Referral", "Discharge Summary"]
+  // Get unique patients from case papers
+  const uniquePatients = Array.from(
+    new Set(casePapers.map(cp => cp.patient).filter(Boolean))
+  ).map(patient => ({ id: patient.id, name: patient.name }))
 
   return (
     <div className="space-y-4">
@@ -55,38 +82,11 @@ export function CasePapersFilters() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Patients</SelectItem>
-            <SelectItem value="1">John Doe</SelectItem>
-            <SelectItem value="2">Sarah Johnson</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* File Type Filter */}
-        <Select value={selectedFileType} onValueChange={setSelectedFileType}>
-          <SelectTrigger className="w-full sm:w-48">
-            <FileType className="h-4 w-4 mr-2" />
-            <SelectValue placeholder="All Types" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="pdf">PDF</SelectItem>
-            <SelectItem value="image">Images</SelectItem>
-            <SelectItem value="doc">Documents</SelectItem>
-            <SelectItem value="dicom">DICOM</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Date Range Filter */}
-        <Select value={selectedDateRange} onValueChange={setSelectedDateRange}>
-          <SelectTrigger className="w-full sm:w-48">
-            <Calendar className="h-4 w-4 mr-2" />
-            <SelectValue placeholder="All Dates" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Dates</SelectItem>
-            <SelectItem value="today">Today</SelectItem>
-            <SelectItem value="week">This Week</SelectItem>
-            <SelectItem value="month">This Month</SelectItem>
-            <SelectItem value="year">This Year</SelectItem>
+            {uniquePatients.map((patient) => (
+              <SelectItem key={patient.id} value={patient.id}>
+                {patient.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
@@ -100,27 +100,11 @@ export function CasePapersFilters() {
           <Button variant="outline" onClick={clearFilters}>
             Clear Filters
           </Button>
+          <Button variant="outline" onClick={onRefresh} className="flex items-center gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
         </div>
-      </div>
-
-      {/* Tag Filters */}
-      <div className="flex flex-wrap gap-2 p-4 bg-card rounded-lg border">
-        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <Tag className="h-4 w-4" />
-          Filter by tags:
-        </div>
-        {availableTags.map((tag) => (
-          <Badge
-            key={tag}
-            variant={selectedTags.includes(tag) ? "default" : "outline"}
-            className="cursor-pointer hover:bg-primary/20"
-            onClick={() => {
-              setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
-            }}
-          >
-            {tag}
-          </Badge>
-        ))}
       </div>
     </div>
   )

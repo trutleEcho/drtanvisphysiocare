@@ -23,23 +23,36 @@ export default function StatCard({props}: { props: StatCardProps }) {
                 </div>
             </CardHeader>
             <CardContent className="space-y-2">
-                <div className="text-3xl font-bold text-foreground">{props.value}</div>
+                <div className="text-3xl font-bold text-foreground">
+                    {props.value ?? "-"}
+                </div>
+
                 <div className="flex items-center space-x-1">
-                    <div className="flex items-center text-primary text-sm font-medium">
-                        {props.trendValue && props.trendValue > 0 ? (
-                            <>
-                                <TrendingUp className="h-3 w-3 mr-1"/>
-                                + {props.trendValue} {props.trendIsPercentage ? "%" : ""}
-                            </>
+                    {props.trendValue !== undefined && (
+                        <div
+                            className={`flex items-center text-sm font-medium ${
+                                props.trendValue > 0 ? "text-primary" : "text-destructive"
+                            }`}
+                        >
+                            {props.trendValue > 0 ? (
+                                <>
+                                    <TrendingUp className="h-3 w-3 mr-1" />
+                                    +{props.trendValue}
+                                    {props.trendIsPercentage ? "%" : ""}
+                                </>
                             ) : (
                                 <>
-                                    <TrendingDown className="h-3 w-3 mr-1"/>
-                                    - {props.trendValue} {props.trendIsPercentage ? "%" : ""}
+                                    <TrendingDown className="h-3 w-3 mr-1" />
+                                    {props.trendValue}
+                                    {props.trendIsPercentage ? "%" : ""}
                                 </>
-                            )
-                        }
-                    </div>
-                    <span className="text-muted-foreground text-sm">{props.trend}</span>
+                            )}
+                        </div>
+                    )}
+
+                    {props.trend && (
+                        <span className="text-muted-foreground text-sm">{props.trend}</span>
+                    )}
                 </div>
             </CardContent>
         </Card>

@@ -30,7 +30,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
                 href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
                 rel="stylesheet"
             />
-            <title>Critical Error - Corner Software</title>
+            <title>Critical Error - Arogyam</title>
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <style
                 dangerouslySetInnerHTML={{
@@ -141,36 +141,36 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
                     }}
                 >
                     {/* 64x64 Logos */}
-                    <Image
-                        src="/CORSW_BG_LIGHT_64x64.png"
-                        alt="Logo"
-                        width={64}
-                        height={64}
-                        className="hidden md:block dark:hidden"
-                    />
-                    <Image
-                        src="/CORSW_BG_DARK_64x64.png"
-                        alt="Logo"
-                        width={64}
-                        height={64}
-                        className="hidden dark:md:block"
-                    />
+                    {/*<Image*/}
+                    {/*    src="/CORSW_BG_LIGHT_64x64.png"*/}
+                    {/*    alt="Logo"*/}
+                    {/*    width={64}*/}
+                    {/*    height={64}*/}
+                    {/*    className="hidden md:block dark:hidden"*/}
+                    {/*/>*/}
+                    {/*<Image*/}
+                    {/*    src="/CORSW_BG_DARK_64x64.png"*/}
+                    {/*    alt="Logo"*/}
+                    {/*    width={64}*/}
+                    {/*    height={64}*/}
+                    {/*    className="hidden dark:md:block"*/}
+                    {/*/>*/}
 
-                    {/* 32x32 Logos */}
-                    <Image
-                        src="/CORSW_BG_LIGHT_32x32.png"
-                        alt="Logo"
-                        width={32}
-                        height={32}
-                        className="block md:hidden dark:hidden"
-                    />
-                    <Image
-                        src="/CORSW_BG_DARK_32x32.png"
-                        alt="Logo"
-                        width={32}
-                        height={32}
-                        className="hidden dark:block dark:md:hidden"
-                    />
+                    {/*/!* 32x32 Logos *!/*/}
+                    {/*<Image*/}
+                    {/*    src="/CORSW_BG_LIGHT_32x32.png"*/}
+                    {/*    alt="Logo"*/}
+                    {/*    width={32}*/}
+                    {/*    height={32}*/}
+                    {/*    className="block md:hidden dark:hidden"*/}
+                    {/*/>*/}
+                    {/*<Image*/}
+                    {/*    src="/CORSW_BG_DARK_32x32.png"*/}
+                    {/*    alt="Logo"*/}
+                    {/*    width={32}*/}
+                    {/*    height={32}*/}
+                    {/*    className="hidden dark:block dark:md:hidden"*/}
+                    {/*/>*/}
                     <span
                         style={{
                             fontSize: "1.25rem",
@@ -178,7 +178,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
                             color: "#fafafa",
                         }}
                     >
-                Corner Software
+                Modlio
               </span>
                 </div>
 

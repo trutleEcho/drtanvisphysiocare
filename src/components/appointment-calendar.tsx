@@ -4,10 +4,17 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { mockAppointments, mockPatients } from "@/lib/db"
+import { appointment } from "@/generated/prisma"
 import { ChevronLeft, ChevronRight, Clock } from "lucide-react"
+import { format } from "date-fns"
+import {AppointmentWithRelations} from "@/lib/api";
 
-export function AppointmentCalendar() {
+interface AppointmentCalendarProps {
+  appointments: AppointmentWithRelations[]
+  onAppointmentClick?: (appointment: appointment) => void
+}
+
+export function AppointmentCalendar({ appointments, onAppointmentClick }: AppointmentCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
 
   const getDaysInMonth = (date: Date) => {
@@ -34,8 +41,16 @@ export function AppointmentCalendar() {
   }
 
   const getAppointmentsForDate = (date: Date) => {
-    const dateString = date.toISOString().split("T")[0]
-    return mockAppointments.filter((apt) => apt.date === dateString)
+    const startOfDay = new Date(date)
+    startOfDay.setHours(0, 0, 0, 0)
+    
+    const endOfDay = new Date(date)
+    endOfDay.setHours(23, 59, 59, 999)
+    
+    return appointments.filter((apt) => {
+      const aptDate = new Date(apt.dateTime)
+      return aptDate >= startOfDay && aptDate <= endOfDay
+    })
   }
 
   const navigateMonth = (direction: "prev" | "next") => {
@@ -93,7 +108,8 @@ export function AppointmentCalendar() {
             return (
               <div
                 key={day.toISOString()}
-                className={`p-2 h-24 border border-border rounded-lg hover:bg-muted/50 transition-colors ${
+                className={`p-2 h-48 border border-border rounded-lg hover:bg-muted/50 transition-colors overflow-hidden overflow-y-scroll [scrollbar-width:none] [-ms-overflow-style:none] 
+            [&::-webkit-scrollbar]:hidden ${
                   isToday ? "bg-primary/10 border-primary" : ""
                 }`}
               >
@@ -110,18 +126,18 @@ export function AppointmentCalendar() {
 
                 <div className="space-y-1">
                   {appointments.slice(0, 2).map((appointment) => {
-                    const patient = mockPatients.find((p) => p.id === appointment.patientId)
                     return (
                       <div
                         key={appointment.id}
-                        className="text-xs p-1 bg-primary/20 rounded text-primary-foreground truncate"
+                        className="text-xs p-1 bg-primary/20 rounded text-primary-foreground truncate cursor-pointer hover:bg-primary/30 transition-colors"
+                        onClick={() => onAppointmentClick?.(appointment)}
                       >
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {appointment.time}
+                          {format(new Date(appointment.dateTime), "HH:mm")}
                         </div>
                         <div className="truncate">
-                          {patient?.firstName} {patient?.lastName}
+                          {appointment?.patient?.name || "Unknown Patient"}
                         </div>
                       </div>
                     )

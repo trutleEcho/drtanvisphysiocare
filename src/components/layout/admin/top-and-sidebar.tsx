@@ -12,27 +12,46 @@ import {
     SidebarBody,
     SidebarLink
 } from "@/components/ui/sidebar";
-import Link from "next/link";
 import {Separator} from "@/components/ui/separator";
 import {AnimatedThemeToggler} from "@/components/magicui/animated-theme-toggler";
 import Image from "next/image";
+import {createClient} from "@/lib/client";
+import {useRouter} from "next/navigation";
+import {Button} from "@/components/ui/button";
+import {useAppDispatch, useAppSelector} from "@/lib/store";
+import {clearUser} from "@/data/reducers/user-reducer";
+import {clearDoctor} from "@/data/reducers/doctor-reducer";
 
 const links = [
-    {label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="w-5 h-5"/>},
-    {label: "Patients", href: "/patients", icon: <Users className="w-5 h-5"/>},
-    {label: "Appointments", href: "/appointments", icon: <Calendar className="w-5 h-5"/>},
-    {label: "Case Papers", href: "/case-papers", icon: <FileText className="w-5 h-5"/>},
-    {label: "Programs", href: "/programs", icon: <GraduationCap className="w-5 h-5"/>},
+    {label: "Dashboard", href: "/a/n/dashboard", icon: <LayoutDashboard className="w-5 h-5"/>},
+    {label: "Patients", href: "/a/n/patients", icon: <Users className="w-5 h-5"/>},
+    {label: "Appointments", href: "/a/n/appointments", icon: <Calendar className="w-5 h-5"/>},
+    {label: "Case Papers", href: "/a/n/case-papers", icon: <FileText className="w-5 h-5"/>},
+    {label: "Programs", href: "/a/n/programs", icon: <GraduationCap className="w-5 h-5"/>},
 ];
 
-export function TopAndSidebar() {
+export default function TopAndSidebar() {
+    const router = useRouter()
+    const dispatch = useAppDispatch()
+    const organization = useAppSelector((state) => state.organization)
+    const doctor = useAppSelector((state) => state.doctor)
+
+    const logout = async () => {
+        const supabase = createClient()
+        await supabase.auth.signOut()
+
+        dispatch(clearUser())
+        dispatch(clearDoctor())
+
+        router.replace('/auth/login')
+    }
+
     return (
         <>
             <Sidebar>
                 <SidebarBody className="justify-between gap-10">
                     <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-                        {/*<Logo/>*/}
-                        <div className="mt-8 flex flex-col gap-2">
+                        <div className="mt-18 flex flex-col gap-2">
                             {links.map((link, idx) => (
                                 <SidebarLink key={idx} link={link}/>
                             ))}
@@ -40,58 +59,48 @@ export function TopAndSidebar() {
                     </div>
                     <div>
                         <SidebarLink
+                            className="flex flex-row items-center justify-around bg-secondary/20 rounded-full"
                             link={{
-                                label: "Employee Name",
+                                label: `${doctor.name}`,
                                 href: "#",
                                 icon: (
                                     <Image
-                                        src="/Tanvis_Favicon.png"
-                                        className="h-7 w-7 shrink-0 rounded-full"
-                                        width={50}
-                                        height={50}
+                                        src={'/avatar.png'}
+                                        className="h-5 w-5 shrink-0 rounded-full"
+                                        width={100}
+                                        height={100}
                                         alt="Avatar"
                                     />
                                 ),
                             }}
                         />
                         <Separator className="my-2"/>
-                        <SidebarLink
-                            link={{
-                                label: "Logout",
-                                href: "/logout",
-                                icon: <LogOut className="w-5 h-5 text-red-500"/>,
-                            }}
-                            className="justify-center"
-                        ></SidebarLink>
+                        {/*<SidebarLink*/}
+                        {/*    link={{*/}
+                        {/*        label: "Logout",*/}
+                        {/*        href: "/logout",*/}
+                        {/*        icon: <LogOut className="w-5 h-5 text-red-500"/>,*/}
+                        {/*    }}*/}
+                        {/*    className="justify-center"*/}
+                        {/*></SidebarLink>*/}
+                        <Button onClick={logout}
+                                className="text-red-500 flex flex-row items-center justify-center gap-5 w-full"
+                                variant="ghost"><LogOut className="w-5 h-5 text-red-500"/><span>Logout</span></Button>
                     </div>
                 </SidebarBody>
             </Sidebar>
             <section className="absolute top-0 right-0 w-full bg-transparent flex justify-between p-4">
-                <Image
-                    src="/Tanvis_Lable.png"
-                    alt="Tanvis PhysioCare"
-                    width={128}
-                    height={128}
-                    className="ml-24"
-                />
+                {organization.logo && (
+                    <Image
+                        src={organization.logo}
+                        alt="Arogyam"
+                        width={128}
+                        height={128}
+                        className="ml-2"
+                    />
+                )}
                 <AnimatedThemeToggler className="p-2 rounded-full hover:bg-accent  bg-background"/>
             </section>
         </>
     );
 }
-
-export const Logo = () => {
-    return (
-        <Link
-            href="/"
-            className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal border-b border-border/30"
-        >
-            <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm"/>
-            <span
-                className="font-medium whitespace-pre text-xl"
-            >
-                Dr. Tanvis PhysioCare
-            </span>
-        </Link>
-    );
-};

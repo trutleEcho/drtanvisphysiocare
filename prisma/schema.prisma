@@ -14,124 +14,173 @@ datasource db {
   url      = env("POSTGRES_URL_NON_POOLING")
 }
 
-model Organization {
+model organization {
   id          String      @id @default(cuid())
   name        String
+  logo        String?
   address     String?
   phone       String?
   email       String?     @unique
-  doctors     Doctor[]
-  employees   Employee[]
-  patients    Patient[]
-  programs    Program[]
+  doctors     doctor[]
+  employees   employee[]
+  patients    patient[]
+  programs    program[]
+  exerciseTemplates exerciseTemplate[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
 
-model Doctor {
+model doctor {
   id          String        @id @default(cuid())
+  avatar      String?
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization   organization @relation(fields: [organizationId], references: [id])
   name        String
   specialization String?
   email       String?       @unique
   phone       String?
-  employees   Employee[]    @relation("DoctorEmployees")
-  appointments Appointment[]
-  patients     Patient[]     @relation("DoctorPatients")
+  employees   employee[]    @relation("DoctorEmployees")
+  appointments appointment[]
+  patients     patient[]     @relation("DoctorPatients")
+  programs    program[]
+  progressNotes progressNote[]
+  casePapers  casePaper[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
 
-model Employee {
+model employee {
   id          String   @id @default(cuid())
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization   organization @relation(fields: [organizationId], references: [id])
   name        String
   role        String   // e.g. "Receptionist", "Therapy Assistant"
   email       String?  @unique
   phone       String?
   doctorId    String?
-  doctor      Doctor?  @relation("DoctorEmployees", fields: [doctorId], references: [id])
+  doctor      doctor?  @relation("DoctorEmployees", fields: [doctorId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-model Patient {
+model patient {
   id          String        @id @default(cuid())
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization   organization @relation(fields: [organizationId], references: [id])
   name        String
   age         Int?
   gender      String?
-  email       String?       @unique
+  email       String?
   phone       String?
   address     String?
   doctorId    String?
-  doctor      Doctor?       @relation("DoctorPatients", fields: [doctorId], references: [id])
-  casePapers  CasePaper[]
-  appointments Appointment[]
-  programs    Program[]
-  progressNotes ProgressNote[]
+  doctor      doctor?       @relation("DoctorPatients", fields: [doctorId], references: [id])
+  casePapers  casePaper[]
+  appointments appointment[]
+  programs    program[]
+  progressNotes progressNote[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
 
-model CasePaper {
+model casePaper {
   id          String   @id @default(cuid())
   patientId   String
-  patient     Patient  @relation(fields: [patientId], references: [id])
+  patient     patient @relation(fields: [patientId], references: [id])
   diagnosis   String
   history     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  doctor doctor[]
 }
 
-model Appointment {
+model appointment {
   id          String   @id @default(cuid())
   doctorId    String?
-  doctor      Doctor?  @relation(fields: [doctorId], references: [id])
+  doctor      doctor?  @relation(fields: [doctorId], references: [id])
   patientId   String
-  patient     Patient  @relation(fields: [patientId], references: [id])
+  patient     patient  @relation(fields: [patientId], references: [id])
   dateTime    DateTime
   status      String   // "Scheduled", "Completed", "Cancelled"
+  notes       String?
+  consultationFee Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-model Program {
+model program {
   id          String   @id @default(cuid())
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  patientId   String
-  patient     Patient  @relation(fields: [patientId], references: [id])
+  organization   organization @relation(fields: [organizationId], references: [id])
+  patientId   String?
+  patient     patient?  @relation(fields: [patientId], references: [id])
   name        String   // e.g. "Knee Rehab Program"
   description String?
-  startDate   DateTime
+  startDate   DateTime?
   endDate     DateTime?
-  exercises   Exercise[]
+  weekNumber  Int?
+  workouts    workout[]
+  exercises   exercise[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  doctor doctor[]
+}
+
+model workout {
+  id          String   @id @default(cuid())
+  programId   String
+  program     program?  @relation(fields: [programId], references: [id])
+  exercises   exercise[]
+  date        DateTime?
+  weekNumber  Int?
+  duration    Int?     // in minutes
+  intensity   String   // e.g. "Low", "Moderate", "High"
+  notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-model Exercise {
+model exercise {
   id          String   @id @default(cuid())
-  programId   String
-  program     Program  @relation(fields: [programId], references: [id])
+  programId   String?
+  program     program?  @relation(fields: [programId], references: [id])
+  workoutId   String?
+  workout     workout?  @relation(fields: [workoutId], references: [id])
   name        String
   description String?
   repetitions Int?
   sets        Int?
   duration    Int?     // in minutes
+  youtubeLink String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-model ProgressNote {
+model exerciseTemplate {
+  id            String   @id @default(cuid())
+  organizationId String
+  organization   organization @relation(fields: [organizationId], references: [id])
+  name          String
+  description   String?
+  category      String?
+  repetitions   Int?
+  sets          Int?
+  duration      Int?     // in minutes
+  youtubeLink   String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model progressNote {
   id          String   @id @default(cuid())
   patientId   String
-  patient     Patient  @relation(fields: [patientId], references: [id])
+  patient     patient  @relation(fields: [patientId], references: [id])
   note        String
   progress    String?  // e.g. "Improved ROM", "Pain reduced"
   createdAt   DateTime @default(now())
+
+  doctor doctor[]
 }

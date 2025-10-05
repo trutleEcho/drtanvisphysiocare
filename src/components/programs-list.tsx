@@ -1,21 +1,29 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { mockPrograms } from "@/lib/db"
-import { Clock, Users, Target, MoreHorizontal, Edit, Copy, Trash2, Play, Pause } from "lucide-react"
+import { Clock, Users, Target, MoreHorizontal, Edit, Copy, Trash2, Play, Pause, UserPlus, Settings } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { programApi } from "@/lib/api"
+import { toast } from "sonner"
+import { format } from "date-fns"
+import { AddExerciseDialog } from "@/components/add-exercise-dialog"
+import { AssignProgramDialog } from "@/components/assign-program-dialog"
+import { EditProgramDialog } from "@/components/edit-program-dialog"
+import { EditExerciseDialog } from "@/components/edit-exercise-dialog"
+import { useRouter } from "next/navigation"
 
 interface ProgramsListProps {
   viewMode: "grid" | "list"
+  programs: any[]
+  onRefresh?: () => void
 }
 
-export function ProgramsList({ viewMode }: ProgramsListProps) {
-  const [programs] = useState(mockPrograms)
+export function ProgramsList({ viewMode, programs, onRefresh }: ProgramsListProps) {
+  const router = useRouter()
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -47,17 +55,59 @@ export function ProgramsList({ viewMode }: ProgramsListProps) {
     }
   }
 
+  const getProgramTypeColor = (program: any) => {
+    if (program.patientId === null) {
+      return "bg-blue-100 text-blue-800" // Generic
+    } else {
+      return "bg-purple-100 text-purple-800" // Patient-specific
+    }
+  }
+
+  const handleDelete = async (programId: string) => {
+    try {
+      await programApi.deleteProgram(programId)
+      toast.success("Program deleted successfully")
+      onRefresh?.()
+    } catch (error) {
+      toast.error("Failed to delete program")
+    }
+  }
+
+  const handleStatusUpdate = async (programId: string, newStatus: string) => {
+    try {
+      await programApi.updateProgram(programId, { status: newStatus })
+      toast.success(`Program ${newStatus.toLowerCase()} successfully`)
+      onRefresh?.()
+    } catch (error) {
+      toast.error("Failed to update program status")
+    }
+  }
+
+  const handleViewProgram = (programId: string) => {
+    router.push(`/a/n/programs/${programId}`)
+  }
+
+  if (programs.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-foreground mb-2">No Programs Found</h3>
+        <p className="text-muted-foreground">Create your first program to get started.</p>
+      </div>
+    )
+  }
+
   if (viewMode === "grid") {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {programs.map((program) => (
-          <Card key={program.id} className="hover:shadow-md transition-shadow group">
+          <Card key={program.id} className="hover:shadow-md transition-shadow group cursor-pointer" onClick={() => handleViewProgram(program.id)}>
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg line-clamp-2">{program.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{program.description}</p>
-                </div>
+              <div className="space-y-1">
+                <CardTitle className="text-lg line-clamp-2">{program.name}</CardTitle>
+                <p className="text-sm text-muted-foreground line-clamp-2">{program.description || "No description"}</p>
+              </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -65,21 +115,65 @@ export function ProgramsList({ viewMode }: ProgramsListProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link href={`/src/app/(admin)/programs/${program.id}`} className="flex items-center gap-2">
-                        <Edit className="h-4 w-4" />
-                        Edit Program
-                      </Link>
+                    <DropdownMenuItem 
+                      className="flex items-center gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleViewProgram(program.id)
+                      }}
+                    >
+                      <Edit className="h-4 w-4" />
+                      View Details
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2">
+                    <EditProgramDialog program={program} onSuccess={onRefresh}>
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2"
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        <Settings className="h-4 w-4" />
+                        Edit Program
+                      </DropdownMenuItem>
+                    </EditProgramDialog>
+                    <AssignProgramDialog 
+                      programId={program.id} 
+                      currentPatientId={program.patientId}
+                      onSuccess={onRefresh}
+                    >
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2"
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        {program.patientId ? "Manage Assignment" : "Assign to Patient"}
+                      </DropdownMenuItem>
+                    </AssignProgramDialog>
+                    <DropdownMenuItem 
+                      className="flex items-center gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // TODO: Implement duplicate functionality
+                      }}
+                    >
                       <Copy className="h-4 w-4" />
                       Duplicate
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2">
+                    <DropdownMenuItem 
+                      className="flex items-center gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleStatusUpdate(program.id, program.status === "active" ? "draft" : "active")
+                      }}
+                    >
                       {program.status === "active" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                       {program.status === "active" ? "Pause" : "Activate"}
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2 text-destructive">
+                    <DropdownMenuItem 
+                      className="flex items-center gap-2 text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDelete(program.id)
+                      }}
+                    >
                       <Trash2 className="h-4 w-4" />
                       Delete
                     </DropdownMenuItem>
@@ -94,22 +188,27 @@ export function ProgramsList({ viewMode }: ProgramsListProps) {
                   <div className="flex items-center justify-center mb-1">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <p className="text-sm font-medium">{program.duration} weeks</p>
+                  <p className="text-sm font-medium">
+                    {program.startDate && program.endDate 
+                      ? `${Math.ceil((new Date(program.endDate).getTime() - new Date(program.startDate).getTime()) / (1000 * 60 * 60 * 24 * 7))} weeks`
+                      : "Ongoing"
+                    }
+                  </p>
                   <p className="text-xs text-muted-foreground">Duration</p>
                 </div>
                 <div>
                   <div className="flex items-center justify-center mb-1">
                     <Target className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <p className="text-sm font-medium">{program.exercises.length}</p>
+                  <p className="text-sm font-medium">{program.exercises?.length || 0}</p>
                   <p className="text-xs text-muted-foreground">Exercises</p>
                 </div>
                 <div>
                   <div className="flex items-center justify-center mb-1">
                     <Users className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <p className="text-sm font-medium">{program.assignedPatients.length}</p>
-                  <p className="text-xs text-muted-foreground">Patients</p>
+                  <p className="text-sm font-medium">{program.patient?.name ? "1" : "Generic"}</p>
+                  <p className="text-xs text-muted-foreground">Patient</p>
                 </div>
               </div>
 
@@ -124,9 +223,26 @@ export function ProgramsList({ viewMode }: ProgramsListProps) {
 
               {/* Badges */}
               <div className="flex flex-wrap gap-2">
-                <Badge className={getCategoryColor(program.category)}>{program.category}</Badge>
-                <Badge className={getStatusColor(program.status)}>{program.status}</Badge>
+                <Badge className={getProgramTypeColor(program)}>
+                  {program.patientId === null ? "Generic" : "Patient-Specific"}
+                </Badge>
+                {program.patient && (
+                  <Badge variant="outline">{program.patient.name}</Badge>
+                )}
               </div>
+
+              {/* Add Exercise Button */}
+              <AddExerciseDialog programId={program.id} onSuccess={onRefresh}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Target className="h-4 w-4 mr-2" />
+                  Add Exercise
+                </Button>
+              </AddExerciseDialog>
             </CardContent>
           </Card>
         ))}
@@ -143,27 +259,34 @@ export function ProgramsList({ viewMode }: ProgramsListProps) {
               <div className="flex-1 space-y-3">
                 <div>
                   <h3 className="text-xl font-semibold text-foreground">{program.name}</h3>
-                  <p className="text-muted-foreground">{program.description}</p>
+                  <p className="text-muted-foreground">{program.description || "No description"}</p>
                 </div>
 
                 <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    {program.duration} weeks duration
+                    {program.startDate && program.endDate 
+                      ? `${Math.ceil((new Date(program.endDate).getTime() - new Date(program.startDate).getTime()) / (1000 * 60 * 60 * 24 * 7))} weeks duration`
+                      : "Ongoing"
+                    }
                   </div>
                   <div className="flex items-center gap-1">
                     <Target className="h-4 w-4" />
-                    {program.exercises.length} exercises
+                    {program.exercises?.length || 0} exercises
                   </div>
                   <div className="flex items-center gap-1">
                     <Users className="h-4 w-4" />
-                    {program.assignedPatients.length} assigned patients
+                    {program.patient?.name ? `Patient: ${program.patient.name}` : "Generic Program"}
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <Badge className={getCategoryColor(program.category)}>{program.category}</Badge>
-                  <Badge className={getStatusColor(program.status)}>{program.status}</Badge>
+                  <Badge className={getProgramTypeColor(program)}>
+                    {program.patientId === null ? "Generic" : "Patient-Specific"}
+                  </Badge>
+                  {program.patient && (
+                    <Badge variant="outline">{program.patient.name}</Badge>
+                  )}
                 </div>
 
                 {/* Progress */}
@@ -177,8 +300,12 @@ export function ProgramsList({ viewMode }: ProgramsListProps) {
               </div>
 
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/src/app/(admin)/programs/${program.id}`}>View Details</Link>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleViewProgram(program.id)}
+                >
+                  View Details
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -187,19 +314,55 @@ export function ProgramsList({ viewMode }: ProgramsListProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="flex items-center gap-2">
+                    <DropdownMenuItem 
+                      className="flex items-center gap-2"
+                      onClick={() => handleViewProgram(program.id)}
+                    >
                       <Edit className="h-4 w-4" />
-                      Edit Program
+                      View Details
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2">
+                    <EditProgramDialog program={program} onSuccess={onRefresh}>
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2"
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        <Settings className="h-4 w-4" />
+                        Edit Program
+                      </DropdownMenuItem>
+                    </EditProgramDialog>
+                    <AssignProgramDialog 
+                      programId={program.id} 
+                      currentPatientId={program.patientId}
+                      onSuccess={onRefresh}
+                    >
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2"
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        {program.patientId ? "Manage Assignment" : "Assign to Patient"}
+                      </DropdownMenuItem>
+                    </AssignProgramDialog>
+                    <DropdownMenuItem 
+                      className="flex items-center gap-2"
+                      onClick={() => {
+                        // TODO: Implement duplicate functionality
+                      }}
+                    >
                       <Copy className="h-4 w-4" />
                       Duplicate
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2">
+                    <DropdownMenuItem 
+                      className="flex items-center gap-2"
+                      onClick={() => handleStatusUpdate(program.id, program.status === "active" ? "draft" : "active")}
+                    >
                       {program.status === "active" ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                       {program.status === "active" ? "Pause" : "Activate"}
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2 text-destructive">
+                    <DropdownMenuItem 
+                      className="flex items-center gap-2 text-destructive"
+                      onClick={() => handleDelete(program.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                       Delete
                     </DropdownMenuItem>

@@ -1,30 +1,69 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Search, Filter, Clock, Users, Target } from "lucide-react"
+import { Search, Filter, Clock, Users, Target, RefreshCw } from "lucide-react"
 
-export function ProgramsFilters() {
+interface ProgramsFiltersProps {
+  programs: any[]
+  onFilteredProgramsChange: (filteredPrograms: any[]) => void
+  onRefresh: () => void
+}
+
+export function ProgramsFilters({ programs, onFilteredProgramsChange, onRefresh }: ProgramsFiltersProps) {
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedDuration, setSelectedDuration] = useState("all")
   const [selectedStatus, setSelectedStatus] = useState("all")
+  const [selectedType, setSelectedType] = useState("all")
+
+  const filterPrograms = useCallback(() => {
+    if (!programs) return []
+    
+    let filtered = [...programs]
+    
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(program =>
+        program.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        program.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        program.patient?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+    
+    // Apply status filter
+    if (selectedStatus !== "all") {
+      filtered = filtered.filter(program => program.status === selectedStatus)
+    }
+    
+    // Apply type filter
+    if (selectedType !== "all") {
+      if (selectedType === "generic") {
+        filtered = filtered.filter(program => program.patientId === null)
+      } else if (selectedType === "patient-specific") {
+        filtered = filtered.filter(program => program.patientId !== null)
+      }
+    }
+    
+    return filtered
+  }, [programs, searchTerm, selectedStatus, selectedType])
+
+  useEffect(() => {
+    const filtered = filterPrograms()
+    onFilteredProgramsChange(filtered)
+  }, [filterPrograms, onFilteredProgramsChange])
 
   const clearFilters = () => {
     setSearchTerm("")
-    setSelectedCategory("all")
-    setSelectedDuration("all")
     setSelectedStatus("all")
+    setSelectedType("all")
   }
 
   const activeFiltersCount = [
     searchTerm,
-    selectedCategory !== "all",
-    selectedDuration !== "all",
     selectedStatus !== "all",
+    selectedType !== "all",
   ].filter(Boolean).length
 
   return (
@@ -40,33 +79,17 @@ export function ProgramsFilters() {
         />
       </div>
 
-      {/* Category Filter */}
-      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+
+      {/* Type Filter */}
+      <Select value={selectedType} onValueChange={setSelectedType}>
         <SelectTrigger className="w-full sm:w-48">
           <Target className="h-4 w-4 mr-2" />
-          <SelectValue placeholder="All Categories" />
+          <SelectValue placeholder="All Types" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Categories</SelectItem>
-          <SelectItem value="rehabilitation">Rehabilitation</SelectItem>
-          <SelectItem value="fitness">Fitness</SelectItem>
-          <SelectItem value="therapy">Therapy</SelectItem>
-          <SelectItem value="recovery">Recovery</SelectItem>
-          <SelectItem value="maintenance">Maintenance</SelectItem>
-        </SelectContent>
-      </Select>
-
-      {/* Duration Filter */}
-      <Select value={selectedDuration} onValueChange={setSelectedDuration}>
-        <SelectTrigger className="w-full sm:w-48">
-          <Clock className="h-4 w-4 mr-2" />
-          <SelectValue placeholder="All Durations" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Durations</SelectItem>
-          <SelectItem value="short">1-4 weeks</SelectItem>
-          <SelectItem value="medium">1-3 months</SelectItem>
-          <SelectItem value="long">3+ months</SelectItem>
+          <SelectItem value="all">All Types</SelectItem>
+          <SelectItem value="generic">Generic</SelectItem>
+          <SelectItem value="patient-specific">Patient-Specific</SelectItem>
         </SelectContent>
       </Select>
 
@@ -93,6 +116,10 @@ export function ProgramsFilters() {
         )}
         <Button variant="outline" onClick={clearFilters}>
           Clear Filters
+        </Button>
+        <Button variant="outline" onClick={onRefresh} className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4" />
+          Refresh
         </Button>
       </div>
     </div>
